@@ -10,7 +10,7 @@ This skill helps you push your project to a Gitee repository using token authent
 ## Repository Configuration
 
 - **Repository URL**: https://gitee.com/neusoft_wangyao_jsj/webdesign004project.git
-- **Token**: ab8814ea5959fbd9b8478fc7e2e7b016
+- **Token**: 2895bf9c892c041ddec4eb9439fc7345
 
 ## Steps
 
@@ -28,7 +28,7 @@ This skill helps you push your project to a Gitee repository using token authent
 git init
 
 # Add remote with token
-git remote add origin https://ab8814ea5959fbd9b8478fc7e2e7b016@gitee.com/neusoft_wangyao_jsj/webdesign004project.git
+git remote add origin https://2895bf9c892c041ddec4eb9439fc7345@gitee.com/neusoft_wangyao_jsj/webdesign004project.git
 
 # Add all files
 git add .
