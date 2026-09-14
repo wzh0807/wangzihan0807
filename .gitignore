@@ -1,0 +1,89 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temp
+*.tmp
+*.temp
+
+# CodeBuddy
+.codebuddy/
+.codebuddycn/
+
+# Other tools
+.trae-cn/
+.vscode-shared/
+.local/
+.cache/
+.copilot/
+.codex/
+.marscode/
+.m2/
+.ai_completion/
+.android/
+.config/
+.copilot/
+.djl.ai/
+.dotnet/
+.goldminer3/
+.hvigor/
+.icube-remote-ssh/
+.idlerc/
+.Ld9VirtualBox/
+.lingma/
+.local/
+.nx/
+.ohpm/
+.packettracer
+.ssh/
+.sts4/
+.trae-cn/
+.vscode-shared/
+.vscode/
+AppData/
+Application Data/
+Contacts/
+Cookies/
+Downloads/
+Favorites/
+Links/
+Local Settings/
+Microsoft/
+Music/
+My Documents/
+NetHood/
+NTUSER.DAT*
+ntuser.ini
+OneDrive/
+Pictures/
+PrintHood/
+Recent/
+Saved Games/
+Searches/
+SendTo/
+Templates/
+Videos/
+.vscode-remote-wsl/
+WPS Cloud Files/
+WPS Cloud/
+WPSDrive/
+「开始」菜单/
+d/

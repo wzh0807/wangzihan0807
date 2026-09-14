@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>李汶静 — 《高级网页设计》课堂实践</title>
+  <style>
+    body{font-family:Segoe UI, "Helvetica Neue", Arial, sans-serif;background:linear-gradient(135deg,#f8fafc,#eef2ff);color:#111;margin:0;padding:0}
+    .container{max-width:980px;margin:48px auto;padding:32px;background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(16,24,40,.08)}
+    .header{display:flex;align-items:center;gap:16px}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#6b7280,#111827);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px}
+    h1{margin:0;font-size:24px;color:#0f172a}
+    p.lead{margin:4px 0 24px;color:#475569}
+    .nav{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+    .nav a{padding:10px 14px;background:#f1f5f9;border-radius:8px;text-decoration:none;color:#0f172a;border:1px solid #e2e8f0}
+    .section{margin-top:18px}
+    .card{padding:16px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #eef2ff}
+    ul.files{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+    ul.files li a{display:block;padding:10px;border-radius:8px;text-decoration:none;color:#0369a1}
+    ul.files li a:hover{background:#f8fafc}
+    .footer{margin-top:24px;padding-top:12px;border-top:1px solid #f1f5f9;color:#64748b;font-size:14px}
+    .prompt{white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:8px;border-left:4px solid #c7d2fe;color:#0f172a}
+    @media(max-width:640px){.container{margin:20px;padding:18px}.header{flex-direction:column;align-items:flex-start}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">李</div>
+      <div>
+        <h1>李汶静 — 《高级网页设计》课堂实践</h1>
+        <p class="lead">课堂目录 · 实践与示例页面汇总</p>
+      </div>
+    </header>
+
+    <nav class="nav">
+      <a href="#目录">课堂目录</a>
+      <a href="#本目录网页">本目录网页</a>
+      <a href="#提示词">本次提示词</a>
+    </nav>
+
+    <section id="目录" class="section">
+      <h2>课堂目录</h2>
+      <div class="card">
+        <ul>
+          <li><strong>HTML基础</strong> — <a href="#html基础">查看简介</a></li>
+          <li><strong>自我介绍网页</strong> — <a href="#自我介绍网页">查看示例</a></li>
+          <li><strong>其余模块</strong> — 后续在增加</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="本目录网页" class="section">
+      <h2>本目录下的网页</h2>
+      <div class="card">
+        <p>以下为本目录中检测到的 HTML 文件：</p>
+        <ul class="files">
+          <li><a href="html.html">HTML 基础（html.html）</a></li>
+          <li><a href="d:/作业/html_new.html">自我介绍（html_new.html）</a></li>
+          <li><a href="self-intro.html">自我介绍（self-intro.html）</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="html基础" class="section">
+      <h2>HTML基础</h2>
+      <div class="card">
+        <p>HTML 基础部分将包含：文档结构、标签、语义化、表单、媒体等。</p>
+      </div>
+    </section>
+
+    <section id="自我介绍网页" class="section">
+      <h2>自我介绍网页</h2>
+      <div class="card">
+        <p>示例：创建一个简单的自我介绍页面，包含头像、简介、技能和联系方式。</p>
+        <p><a href="#本目录网页">返回本目录</a></p>
+      </div>
+    </section>
+
+    <section id="提示词" class="section">
+      <h2>本次提示词（原文）</h2>
+      <div class="prompt">“创建一个新页面，包括本目录下的所有网页的超链接，使用原生代码，不使用cdn，新页面名称为index.html，主题为李汶静的《高级网页设计》课堂实践，美化页面，课堂目录中包含HTML基础、自我介绍网页、其余模块后续在增加。页面中包括本提示词。”</div>
+    </section>
+
+    <footer class="footer">
+      <p>创建于本目录 — 若要将其他页面加入本索引，请把 HTML 文件放到相同目录。</p>
+    </footer>
+  </div>
+</body>
+</html>
