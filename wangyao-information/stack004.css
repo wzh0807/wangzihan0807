@@ -1,0 +1,23 @@
+*{
+    padding: 0;/*内边距*/
+    margin: 0;/*外边距*/
+    /*width和height是包含边框border和padding */
+    box-sizing: border-box;
+}
+body{
+    background-color: yellow;
+    font-family: "微软雅黑";
+    color: blue;
+}
+/*继承：子元素会继承父元素的属性，比如font、color，
+但是不会继承margin和padding*/
+.container{
+    background-color: red;
+    width:1200px;
+    margin: 40px auto;
+}
+h2{
+    text-align:center;
+    margin-bottom: 20px;
+    font-size: 30px;
+}
