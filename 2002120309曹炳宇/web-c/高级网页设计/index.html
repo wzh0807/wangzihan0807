@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="曹炳宇的高级网页设计">
+    <title>曹炳宇的网页设计</title>
+    <style>
+        :root {
+            --ink: #17212b;
+            --muted: #66727d;
+            --paper: #f6f3ed;
+            --white: #fffdf8;
+            --line: #ddd8ce;
+            --teal: #1e6865;
+            --teal-light: #60d1c6;
+            --coral: #d9684f;
+            --yellow: #f1c75b;
+            --shadow: 0 18px 45px rgba(40, 48, 53, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: var(--paper);
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            line-height: 1.6;
+        }
+
+        body::before {
+            position: fixed;
+            z-index: -1;
+            inset: 0;
+            content: "";
+            opacity: 0.55;
+            background-image: linear-gradient(rgba(30, 104, 101, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 104, 101, 0.045) 1px, transparent 1px);
+            background-size: 34px 34px;
+            pointer-events: none;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .shell {
+            width: min(1120px, calc(100% - 40px));
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 0;
+            color: var(--teal);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+
+        .brand-mark {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-mark::before {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            content: "";
+            background: var(--coral);
+            transform: rotate(45deg);
+        }
+
+        .topbar span:last-child {
+            color: var(--muted);
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: clamp(52px, 9vw, 104px) clamp(28px, 7vw, 88px);
+            border-radius: 4px;
+            background: var(--teal);
+            box-shadow: var(--shadow);
+        }
+
+        .hero::after {
+            position: absolute;
+            right: 7%;
+            bottom: -90px;
+            width: 240px;
+            height: 240px;
+            border: 1px solid rgba(255, 253, 248, 0.25);
+            border-radius: 50%;
+            content: "";
+            box-shadow: 0 0 0 28px rgba(255, 253, 248, 0.06), 0 0 0 56px rgba(255, 253, 248, 0.04);
+        }
+
+        .eyebrow {
+            margin: 0 0 18px;
+            color: var(--yellow);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        h1,
+        h2,
+        p {
+            margin-top: 0;
+        }
+
+        h1 {
+            max-width: 680px;
+            margin-bottom: 22px;
+            color: var(--white);
+            font-family: Georgia, "Noto Serif SC", serif;
+            font-size: clamp(38px, 7vw, 76px);
+            font-weight: 400;
+            line-height: 1.08;
+            letter-spacing: 0;
+        }
+
+        .hero-intro {
+            max-width: 600px;
+            margin-bottom: 0;
+            color: rgba(255, 253, 248, 0.8);
+            font-size: 17px;
+        }
+
+        .content {
+            padding: 72px 0 84px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 25px;
+        }
+
+        .section-heading h2 {
+            margin-bottom: 0;
+            font-family: Georgia, "Noto Serif SC", serif;
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 400;
+        }
+
+        .section-heading p {
+            max-width: 380px;
+            margin-bottom: 4px;
+            color: var(--muted);
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .course-card {
+            display: flex;
+            min-height: 250px;
+            flex-direction: column;
+            padding: 26px;
+            border: 1px solid var(--line);
+            background: rgba(255, 253, 248, 0.78);
+            transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        }
+
+        .course-card:hover {
+            border-color: var(--teal);
+            box-shadow: var(--shadow);
+            transform: translateY(-5px);
+        }
+
+        .card-number {
+            display: block;
+            margin-bottom: 34px;
+            color: var(--coral);
+            font-family: Georgia, serif;
+            font-size: 28px;
+        }
+
+        .course-card h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .course-card p {
+            margin-bottom: 24px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            width: fit-content;
+            margin-top: auto;
+            color: var(--teal);
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .card-link::after {
+            content: "↗";
+            font-size: 18px;
+            transition: transform 180ms ease;
+        }
+
+        .card-link:hover::after {
+            transform: translate(3px, -3px);
+        }
+
+        .pending {
+            border-style: dashed;
+            background: rgba(255, 253, 248, 0.42);
+        }
+
+        .pending .card-number {
+            color: var(--teal);
+        }
+
+        .prompt {
+            display: grid;
+            grid-template-columns: 0.8fr 2fr;
+            gap: 32px;
+            margin-top: 72px;
+            padding: 32px;
+            border-top: 3px solid var(--coral);
+            background: var(--white);
+        }
+
+        .prompt h2 {
+            margin-bottom: 0;
+            font-family: Georgia, "Noto Serif SC", serif;
+            font-size: 26px;
+            font-weight: 400;
+        }
+
+        .prompt p {
+            margin-bottom: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        footer {
+            padding: 24px 0 36px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 760px) {
+            .shell {
+                width: min(100% - 28px, 560px);
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 7px;
+            }
+
+            .topbar span:last-child {
+                font-size: 12px;
+            }
+
+            .course-grid,
+            .prompt {
+                grid-template-columns: 1fr;
+            }
+
+            .section-heading {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 9px;
+            }
+
+            .section-heading p {
+                margin-bottom: 0;
+                text-align: left;
+            }
+
+            .content {
+                padding-top: 52px;
+            }
+
+            .prompt {
+                gap: 18px;
+                margin-top: 52px;
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="shell topbar">
+        <div class="brand-mark">DWB / CLASSROOM PRACTICE</div>
+        <span>高级网页设计 · 课堂目录</span>
+    </header>
+
+    <main class="shell">
+        <section class="hero" aria-labelledby="page-title">
+            <p class="eyebrow">曹炳宇的学习档案 · 2026</p>
+            <h1 id="page-title">高级网页设计<br>课堂实践</h1>
+            <p class="hero-intro">从布局、图标到交互，把每一次课堂练习整理成可以浏览、可以回看的网页作品集。</p>
+        </section>
+
+        <section class="content" aria-labelledby="directory-title">
+            <div class="section-heading">
+                <h2 id="directory-title">课堂目录</h2>
+                <p>已完成的模块可以直接进入，正在生长的内容会在这里继续留下位置。</p>
+            </div>
+
+            <div class="course-grid">
+                <article class="course-card">
+                    <span class="card-number">01</span>
+                    <h3>Flex 复习</h3>
+                    <p>导航、三等分布局、响应式卡片网格与侧边栏布局练习。</p>
+                    <a class="card-link" href="./9.2.html">查看实践页面</a>
+                </article>
+
+                <article class="course-card">
+                    <span class="card-number">02</span>
+                    <h3>字体图标</h3>
+                    <p>本地字体图标资源与图标演示页面，探索图形化表达。</p>
+                    <a class="card-link" href="./font/demo_index.html">查看字体图标</a>
+                </article>
+
+                <article class="course-card">
+                    <span class="card-number">03</span>
+                    <h3>SVG 图标</h3>
+                    <p>使用 SVG 构建可切换的图标导航，练习基础交互状态。</p>
+                    <a class="card-link" href="./svg005.html">查看 SVG 实践</a>
+                </article>
+
+                <article class="course-card pending">
+                    <span class="card-number">04</span>
+                    <h3>后续模块</h3>
+                    <p>更多课堂实践正在整理中，新的页面将在这里持续加入。</p>
+                    <span class="card-link">即将增加</span>
+                </article>
+            </div>
+
+            <aside class="prompt" aria-labelledby="prompt-title">
+                <h2 id="prompt-title">本次提示词</h2>
+                <p>创建一个新页面，包括本目录下的所有网页的超链接，使用原生代码，不使用 CDN，新页面名称为 index.html，主题为曹炳宇的《高级网页设计》课堂实践，美化页面，课堂目录中包含 flex 复习、字体图标、其余模块后续在增加。页面中包括本提示词。</p>
+            </aside>
+        </section>
+    </main>
+
+    <footer class="shell">曹炳宇高级网页设计 · 课堂实践目录</footer>
+</body>
+
+</html>
