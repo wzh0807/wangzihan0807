@@ -1,0 +1,44 @@
+{
+  "id": "5231936",
+  "name": "1",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "1048861",
+      "name": "收藏",
+      "font_class": "icon_favorite",
+      "unicode": "e60e",
+      "unicode_decimal": 58894
+    },
+    {
+      "icon_id": "1272712",
+      "name": "主页",
+      "font_class": "home-g",
+      "unicode": "e646",
+      "unicode_decimal": 58950
+    },
+    {
+      "icon_id": "4034050",
+      "name": "关注-可关注-列表",
+      "font_class": "shoucang",
+      "unicode": "e659",
+      "unicode_decimal": 58969
+    },
+    {
+      "icon_id": "10332472",
+      "name": "收藏",
+      "font_class": "shoucang1",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "29924766",
+      "name": "我的",
+      "font_class": "icon-test",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    }
+  ]
+}
