@@ -1,0 +1,58 @@
+{
+  "id": "5238914",
+  "name": "svg0000",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "48611496",
+      "name": "browser-copy",
+      "font_class": "browser-copy",
+      "unicode": "e609",
+      "unicode_decimal": 58889
+    },
+    {
+      "icon_id": "48570042",
+      "name": "browser",
+      "font_class": "browser",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "48570046",
+      "name": "nav",
+      "font_class": "nav",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "48570052",
+      "name": "love",
+      "font_class": "love",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "48570054",
+      "name": "positioning",
+      "font_class": "positioning",
+      "unicode": "e604",
+      "unicode_decimal": 58884
+    },
+    {
+      "icon_id": "48582100",
+      "name": "classification",
+      "font_class": "classification",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "48582109",
+      "name": "video",
+      "font_class": "video",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    }
+  ]
+}
