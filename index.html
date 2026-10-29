@@ -3,281 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>陈禹燃的《高级网页设计》课堂实践</title>
+    <meta name="description" content="王子涵的高级网页设计课堂实践目录">
+    <title>高级网页设计 | 王子涵的课堂实践</title>
     <style>
         :root {
-            --bg-1: #0b1120;
-            --bg-2: #111827;
-            --bg-3: #1f2937;
-            --card: rgba(15, 23, 42, 0.72);
-            --line: rgba(148, 163, 184, 0.18);
-            --gold: #fbbf24;
-            --cyan: #67e8f9;
-            --mint: #86efac;
-            --pink: #fda4af;
-            --white: #f8fafc;
-            --text: #e2e8f0;
-            --muted: #cbd5e1;
-            --shadow: 0 22px 50px rgba(2, 6, 23, 0.55);
+            --ink: #1e293b;
+            --muted: #64748b;
+            --paper: #eef4f3;
+            --card: #ffffff;
+            --line: #cbdedb;
+            --accent: #d66a45;
+            --accent-dark: #a9432d;
+            --teal: #18756f;
         }
-
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         body {
             margin: 0;
-            color: var(--text);
-            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(103, 232, 249, 0.18), transparent 28%),
-                radial-gradient(circle at right center, rgba(251, 191, 36, 0.15), transparent 22%),
-                linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 45%, var(--bg-3) 100%);
+            color: var(--ink);
+            background: var(--paper);
+            font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+            line-height: 1.7;
         }
-
-        .container {
-            width: min(1100px, calc(100% - 32px));
-            margin: 0 auto;
-            padding-bottom: 48px;
-        }
-
-        .hero {
-            padding: 64px 0 24px;
-        }
-
-        .hero-inner {
-            background: rgba(15, 23, 42, 0.62);
-            border: 1px solid var(--line);
-            border-radius: 30px;
-            box-shadow: var(--shadow);
-            padding: 38px 40px;
-            backdrop-filter: blur(8px);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 12px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            background: rgba(251, 191, 36, 0.1);
-            color: var(--gold);
-            border: 1px solid rgba(251, 191, 36, 0.35);
-        }
-
-        h1 {
-            margin: 18px 0 0;
-            font-size: clamp(2.3rem, 5vw, 4rem);
-            line-height: 1.1;
-        }
-
-        .highlight {
-            color: var(--gold);
-            text-shadow: 0 0 18px rgba(251, 191, 36, 0.38);
-        }
-
-        .subtitle {
-            margin-top: 18px;
-            max-width: 760px;
-            color: var(--muted);
-            line-height: 1.9;
-            font-size: 1.08rem;
-        }
-
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .tag {
-            padding: 9px 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(103, 232, 249, 0.26);
-            background: rgba(103, 232, 249, 0.08);
-            color: var(--cyan);
-            font-size: 0.92rem;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 28px;
-            margin-top: 22px;
-        }
-
-        .panel {
-            background: var(--card);
-            border: 1px solid var(--line);
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 18px 22px;
-            border-bottom: 1px solid var(--line);
-            background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(103, 232, 249, 0.08));
-        }
-
-        .panel-header h2 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-
-        .list {
-            list-style: none;
-            padding: 16px 16px 12px;
-            margin: 0;
-            display: grid;
-            gap: 12px;
-        }
-
-        .item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 16px 18px;
-            border-radius: 16px;
-            background: rgba(148, 163, 184, 0.05);
-            border: 1px solid rgba(148, 163, 184, 0.12);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-
-        .item:hover {
-            transform: translateY(-2px);
-            border-color: rgba(103, 232, 249, 0.5);
-        }
-
-        .item a {
-            text-decoration: none;
-            color: var(--white);
-            font-weight: 600;
-        }
-
-        .state {
-            min-width: 82px;
-            text-align: center;
-            padding: 7px 10px;
-            border-radius: 999px;
-            font-size: 0.76rem;
-        }
-
-        .done .state {
-            background: rgba(134, 239, 172, 0.1);
-            border: 1px solid rgba(134, 239, 172, 0.28);
-            color: var(--mint);
-        }
-
-        .pending .state {
-            background: rgba(251, 113, 133, 0.1);
-            border: 1px solid rgba(251, 113, 133, 0.25);
-            color: var(--pink);
-        }
-
-        .pending a {
-            color: var(--muted);
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: .45;
+            background-image: linear-gradient(rgba(24,117,111,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(24,117,111,.06) 1px, transparent 1px);
+            background-size: 32px 32px;
             pointer-events: none;
         }
-
-        .prompt-box {
-            padding: 20px;
-        }
-
-        .prompt-box blockquote {
-            margin: 0;
-            padding: 18px 18px 18px 20px;
-            border-left: 4px solid var(--gold);
-            border-radius: 12px;
-            background: rgba(251, 191, 36, 0.08);
-            color: var(--muted);
-            line-height: 1.9;
-            white-space: pre-line;
-        }
-
-        .footer {
-            text-align: center;
-            color: rgba(203, 213, 225, 0.82);
-            padding: 24px 0 40px;
-        }
-
-        @media (max-width: 760px) {
-            .hero-inner { padding: 28px 20px; }
-            .main-grid { grid-template-columns: 1fr; }
-            .item { flex-direction: column; align-items: flex-start; }
+        .page { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; color: var(--muted); font-size: .9rem; }
+        .mark { color: var(--ink); font-weight: 800; letter-spacing: .08em; }
+        a { color: var(--teal); font-weight: 800; text-decoration: none; }
+        .topbar a { color: var(--ink); border-bottom: 1px solid var(--accent); }
+        .hero { display: grid; grid-template-columns: 1.3fr .7fr; gap: 42px; align-items: end; padding: 72px 0 92px; }
+        .eyebrow { margin: 0 0 18px; color: var(--accent-dark); font-size: .8rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+        h1, h2, h3, p { margin-top: 0; }
+        h1 { max-width: 750px; margin-bottom: 24px; font-family: Georgia, "Songti SC", serif; font-size: clamp(3rem, 8vw, 6.8rem); line-height: .98; letter-spacing: -.04em; font-weight: 500; }
+        .hero-copy { max-width: 600px; color: var(--muted); font-size: 1.08rem; }
+        .hero-stamp { justify-self: end; width: 210px; height: 210px; display: grid; place-items: center; border: 1px solid var(--accent); border-radius: 50%; color: var(--accent-dark); text-align: center; transform: rotate(8deg); }
+        .hero-stamp strong { display: block; font-family: Georgia, "Songti SC", serif; font-size: 3.5rem; line-height: 1; }
+        .section-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+        .section-head h2, .brief h2 { margin-bottom: 0; font-family: Georgia, "Songti SC", serif; font-size: 2.25rem; font-weight: 500; }
+        .section-head p { margin-bottom: 0; color: var(--muted); }
+        .modules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding: 30px 0 96px; }
+        .module { min-height: 260px; display: flex; flex-direction: column; justify-content: space-between; padding: 26px; background: var(--card); border: 1px solid var(--line); box-shadow: 5px 5px 0 rgba(24,117,111,.12); transition: transform .2s ease, box-shadow .2s ease; }
+        .module:hover { transform: translateY(-5px); box-shadow: 8px 11px 0 rgba(24,117,111,.2); }
+        .module.future { background: rgba(255,255,255,.25); border-style: dashed; box-shadow: none; }
+        .module-no { color: var(--accent); font-family: Georgia, serif; font-size: 1.2rem; }
+        .module h3 { margin: 24px 0 8px; font-size: 1.35rem; }
+        .module p { color: var(--muted); font-size: .95rem; }
+        .module-link::after { content: "  ↗"; }
+        .module-status { color: var(--muted); font-size: .82rem; }
+        .brief { display: grid; grid-template-columns: .8fr 1.2fr; gap: 42px; padding: 28px 0 76px; border-top: 1px solid var(--line); }
+        .brief h2 { margin-bottom: 8px; }
+        .prompt { padding: 24px; background: #203d43; color: #eef4f3; border-left: 5px solid var(--accent); white-space: pre-wrap; font-family: Consolas, monospace; font-size: .9rem; }
+        footer { display: flex; justify-content: space-between; gap: 20px; padding: 22px 0 34px; color: var(--muted); border-top: 1px solid var(--line); font-size: .85rem; }
+        @media (max-width: 720px) {
+            .page { width: min(100% - 28px, 540px); }
+            .topbar { padding: 18px 0; }
+            .hero { grid-template-columns: 1fr; padding: 48px 0 64px; gap: 34px; }
+            h1 { font-size: clamp(3rem, 18vw, 5rem); }
+            .hero-stamp { justify-self: start; width: 150px; height: 150px; }
+            .hero-stamp strong { font-size: 2.5rem; }
+            .modules, .brief { grid-template-columns: 1fr; padding-bottom: 64px; }
+            .section-head, footer { align-items: start; flex-direction: column; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="hero">
-            <div class="hero-inner">
-                <div class="badge">课堂实践首页</div>
-                <h1>陈禹燃的<span class="highlight">《高级网页设计》</span>课堂实践</h1>
-                <p class="subtitle">
-                    这是一个以 HTML、CSS 为核心的前端学习实践页面，记录课堂内容、练习成果和网页设计灵感，逐步完善课程作品集与知识目录。
-                </p>
-                <div class="tags">
-                    <span class="tag">课程主题：高级网页设计</span>
-                    <span class="tag">学生：陈禹燃</span>
-                    <span class="tag">实践方向：网页开发</span>
-                </div>
-            </div>
+    <div class="page">
+        <header class="topbar">
+            <span class="mark">SSC / WEB DESIGN</span>
+            <a href="#catalog">进入课堂目录 ↓</a>
         </header>
 
-        <main class="main-grid">
-            <section class="panel">
-                <div class="panel-header">
-                    <h2>课堂目录</h2>
+        <main>
+            <section class="hero" aria-labelledby="page-title">
+                <div>
+                    <p class="eyebrow">Advanced Web Design · Class Practice</p>
+                    <h1 id="page-title">高级网页设计<br>课堂实践</h1>
+                    <p class="hero-copy">王子涵的网页设计学习档案。这里记录从 HTML 结构、页面语义到交互实践的每一步，持续增加中。</p>
                 </div>
-                <ul class="list">
-                    <li class="item done">
-                        <a href="gaojiwanyesheji.html">HTML基础</a>
-                        <span class="state">已完成</span>
-                    </li>
-                    <li class="item done">
-                        <a href="ziwojiashao.html">自我介绍网页</a>
-                        <span class="state">已完成</span>
-                    </li>
-                    <li class="item pending">
-                        <a href="#">其余模块后续在增加</a>
-                        <span class="state">待更新</span>
-                    </li>
-                </ul>
+                <div class="hero-stamp" aria-label="课程实践标记"><div><strong>01</strong>COURSE<br>ARCHIVE</div></div>
             </section>
 
-            <aside class="panel">
-                <div class="panel-header">
-                    <h2>本目录网页</h2>
+            <section id="catalog" aria-labelledby="catalog-title">
+                <div class="section-head">
+                    <h2 id="catalog-title">课堂目录</h2>
+                    <p>已收录 07 个页面 · 计划持续更新</p>
                 </div>
-                <ul class="list">
-                    <li class="item done">
-                        <a href="gaojiwanyesheji.html">gaojiwanyesheji.html</a>
-                        <span class="state">网页</span>
-                    </li>
-                    <li class="item done">
-                        <a href="ziwojiashao.html">ziwojiashao.html</a>
-                        <span class="state">自我介绍</span>
-                    </li>
-                    <li class="item done">
-                        <a href="index.html">index.html</a>
-                        <span class="state">首页</span>
-                    </li>
-                </ul>
-            </aside>
+                <div class="modules">
+                    <article class="module">
+                        <div><span class="module-no">01 / 基础</span><h3>HTML 基础</h3><p>标题、段落、列表、表格、超链接、图片和块级元素的基础练习。</p></div>
+                        <a class="module-link" href="./1/Untitled-1.html">查看练习</a>
+                    </article>
+                    <article class="module">
+                        <div><span class="module-no">02 / 页面</span><h3>自我介绍网页</h3><p>使用语义化标签组织个人信息，练习页面内容与结构的表达。</p></div>
+                        <a class="module-link" href="./1/self.html">查看页面</a>
+                    </article>
+                    <article class="module">
+                        <div><span class="module-no">03 / 表格</span><h3>基础表格</h3><p>练习表格的行、列、表头和单元格结构，整理网页中的信息内容。</p></div>
+                        <a class="module-link" href="./1/form.html">查看页面</a>
+                    </article>
+                    <article class="module">
+                        <div><span class="module-no">04 / CSS</span><h3>层叠与继承＋盒模型</h3><p>理解 CSS 层叠、继承、边框、内边距和外边距，掌握元素空间关系。</p></div>
+                        <a class="module-link" href="./1/stack.html">查看练习</a>
+                    </article>
+                    <article class="module">
+                        <div><span class="module-no">05 / 图文</span><h3>上图下文</h3><p>使用图片、链接和 Flex 布局制作图文结合的课堂练习页面。</p></div>
+                        <a class="module-link" href="./1/pic_above_text.html">查看页面</a>
+                    </article>
+                    <article class="module">
+                        <div><span class="module-no">06 / 归档</span><h3>课堂实践总览</h3><p>返回课堂实践首页，后续新增的课程模块也会继续收录在这里。</p></div>
+                        <a class="module-link" href="./index.html">当前首页</a>
+                    </article>
+                    <article class="module">
+                        <div><span class="module-no">07 / 页面</span><h3>网页整体布局</h3><p>练习使用 CSS 布局技术，创建响应式和美观的网页布局。</p></div>
+                        <a class="module-link" href="./1/layout.html">查看页面</a>
+                    </article>
+                    <article class="module">
+                        <div><span class="module-no">08 / CSS</span><h3>CSS3 选择器与动画</h3><p>练习使用 CSS3 选择器和 animation 动画效果，观察样式变化。</p></div>
+                        <a class="module-link" href="./1/css3004.html">查看练习</a>
+                    </article>
+                </div>
+            </section>
+
+            <section class="brief" aria-labelledby="brief-title">
+                <div><h2 id="brief-title">本页任务</h2><p>把每次课堂实践整理成清晰、可访问、可以继续生长的网页档案。</p></div>
+                <div class="prompt">本提示词：创建一个新页面，包括本目录下的所有网页的超链接，使用原生代码，不使用cdn，新页面名称为index.html，主题为王子涵的《高级网页设计》课堂实践，美化页面，课堂目录中包含HTML基础、自我介绍网页、基础表格、层叠与继承＋盒模型、上图下文等其余模块后续在增加。页面中包括本提示词。</div>
+            </section>
         </main>
 
-        <section class="panel" style="margin-top: 28px;">
-            <div class="panel-header">
-                <h2>本提示词</h2>
-            </div>
-            <div class="prompt-box">
-                <blockquote>创建一个新页面，包括本目录下的所有网页的超链接，使用原生代码，不使用cdn，新页面名称为index.html，主题为陈禹燃的《高级网页设计》课堂实践，美化页面，课堂目录中包含HTML基础、自我介绍网页、其余模块后续在增加。页面中包括本提示词。</blockquote>
-            </div>
-        </section>
-
-        <footer class="footer">© 2026 陈禹燃 · 高级网页设计课堂实践</footer>
+        <footer><span>王子涵 · 高级网页设计</span><span>© 2026 / Learning in public</span></footer>
     </div>
 </body>
 </html>
