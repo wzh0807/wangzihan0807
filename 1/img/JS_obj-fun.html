@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS内部对象</title>
+</head>
+<body>
+      <script>
+      //math对象
+      console.log(Math.floor(3.7)); //向下取整
+      console.log(Math.ceil(3.2)); //向上取整
+      console.log(Math.round(3.5)); //四舍五入
+      console.log(Math.random()); //随机数
+      console.log(Math.floor(Math.random()*10)); //0-9随机整数
+      //date对象
+        var date = new Date();
+        console.log(date.getFullYear()); //获取年份
+        console.log(date.getMonth()); //获取月份（0-11）
+        console.log(date.getDate()); //获取日期（1-31）
+        console.log(date.getDay()); //获取星期几（0-6）
+      </script>
+</body>
+</html>

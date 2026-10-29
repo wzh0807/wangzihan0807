@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抓小球小游戏</title>
+    <link rel="stylesheet" href="catch-ball.css">
+</head>
+<body>
+
+    <!-- 顶部状态栏 -->
+    <header id="status-bar">
+        <div class="status-item">分数：<span id="score">0</span></div>
+        <div class="status-item">剩余：<span id="timer">02:00</span></div>
+    </header>
+
+    <!-- 游戏区域 -->
+    <main id="game-area">
+        <!-- 开始按钮（idle 态显示） -->
+        <button id="start-btn" type="button">开始游戏</button>
+
+        <!-- 小球（playing 态动态生成） -->
+        <div id="ball" hidden></div>
+    </main>
+
+    <!-- 结束弹窗（ended 态显示） -->
+    <div id="end-modal" hidden>
+        <div class="modal-mask"></div>
+        <div class="modal-panel">
+            <h2>游戏结束</h2>
+            <p>最终得分：<span id="final-score">0</span></p>
+            <button id="restart-btn" type="button">再来一局</button>
+        </div>
+    </div>
+
+    <script src="catch-ball.js"></script>
+</body>
+</html>

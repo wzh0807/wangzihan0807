@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数7游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            margin: 0;
+            padding: 24px;
+            color: #172554;
+            font-family: "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #dbeafe, #ede9fe);
+        }
+
+        .game {
+            width: min(100%, 560px);
+            padding: 36px;
+            text-align: center;
+            background: #fff;
+            border: 1px solid #e0e7ff;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(30, 41, 59, .12);
+        }
+
+        h1 {
+            margin: 0;
+            color: #4338ca;
+            font-size: 2.4rem;
+        }
+
+        .rule {
+            margin: 12px 0 28px;
+            color: #64748b;
+            line-height: 1.8;
+        }
+
+        .number {
+            min-height: 150px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 20px;
+            color: #4f46e5;
+            font-size: clamp(5rem, 24vw, 8rem);
+            font-weight: 800;
+            line-height: 1;
+            background: #eef2ff;
+            border-radius: 20px;
+        }
+
+        .number.complete {
+            padding: 20px;
+            color: #15803d;
+            font-size: 1.5rem;
+        }
+
+        .progress {
+            min-height: 24px;
+            margin-bottom: 20px;
+            color: #64748b;
+            font-size: .95rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        button {
+            padding: 12px 22px;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            background: #4f46e5;
+            border: 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background .2s ease, transform .2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: #4338ca;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            color: #94a3b8;
+            background: #e2e8f0;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            color: #4338ca;
+            background: #eef2ff;
+        }
+
+        button.secondary:hover:not(:disabled) {
+            background: #e0e7ff;
+        }
+
+        .history {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 24px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .history li {
+            min-width: 38px;
+            padding: 6px 9px;
+            color: #3730a3;
+            background: #eef2ff;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 480px) {
+            .game {
+                padding: 28px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="game">
+        <h1>数7游戏</h1>
+        <p class="rule">从 1 开始依次报数，遇到数字中含有“7”或是 7 的倍数时跳过。试着数到 100 吧！</p>
+        <div class="number" id="number" aria-live="polite">?</div>
+        <p class="progress" id="progress">点击“开始游戏”开始</p>
+        <div class="controls">
+            <button id="startButton" type="button">开始游戏</button>
+            <button id="nextButton" type="button" disabled>下一个</button>
+            <button id="resetButton" class="secondary" type="button">重新开始</button>
+        </div>
+        <ol class="history" id="history" aria-label="已显示的数字"></ol>
+    </main>
+
+    <script>
+        const numberDisplay = document.getElementById("number");
+        const progressDisplay = document.getElementById("progress");
+        const startButton = document.getElementById("startButton");
+        const nextButton = document.getElementById("nextButton");
+        const resetButton = document.getElementById("resetButton");
+        const history = document.getElementById("history");
+
+        let currentNumber = 0;
+        let gameStarted = false;
+
+        function isSkipped(number) {
+            return number % 7 === 0 || String(number).includes("7");
+        }
+
+        function showNextNumber() {
+            currentNumber += 1;
+
+            while (currentNumber <= 100 && isSkipped(currentNumber)) {
+                currentNumber += 1;
+            }
+
+            if (currentNumber > 100) {
+                numberDisplay.textContent = "完成！";
+                numberDisplay.classList.add("complete");
+                progressDisplay.textContent = "已经数完 1 到 100，恭喜你！";
+                nextButton.disabled = true;
+                return;
+            }
+
+            numberDisplay.textContent = String(currentNumber);
+            progressDisplay.textContent = `当前进度：${currentNumber} / 100`;
+
+            const item = document.createElement("li");
+            item.textContent = String(currentNumber);
+            history.appendChild(item);
+        }
+
+        startButton.addEventListener("click", () => {
+            if (gameStarted) {
+                return;
+            }
+
+            gameStarted = true;
+            startButton.disabled = true;
+            nextButton.disabled = false;
+            showNextNumber();
+        });
+
+        nextButton.addEventListener("click", showNextNumber);
+
+        resetButton.addEventListener("click", () => {
+            currentNumber = 0;
+            gameStarted = false;
+            numberDisplay.textContent = "?";
+            numberDisplay.classList.remove("complete");
+            progressDisplay.textContent = "点击“开始游戏”开始";
+            startButton.disabled = false;
+            nextButton.disabled = true;
+            history.replaceChildren();
+        });
+    </script>
+</body>
+</html>
