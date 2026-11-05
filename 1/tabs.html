@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!--
+      作者：王子涵
+      建立时间：2026-11-02
+      使用模型：DeepSeek-V4.1-Flash
+      功能名称：新闻选项卡页面
+      功能简介：使用可复用的 Tab 组件在页面内切换国内、省内、国际、最热四组新闻内容，默认显示国内新闻。
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="王子涵的高级网页设计课堂实践：可复用的新闻选项卡">
+    <title>新闻选项卡 | 王子涵的课堂实践</title>
+    <style>
+        :root {
+            --ink: #1e293b;
+            --muted: #64748b;
+            --paper: #eef4f3;
+            --card: #ffffff;
+            --line: #cbdedb;
+            --accent: #d66a45;
+            --accent-dark: #a9432d;
+            --teal: #18756f;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: var(--paper);
+            font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+            line-height: 1.7;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: .45;
+            background-image: linear-gradient(rgba(24,117,111,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(24,117,111,.06) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+        }
+        .page { width: min(1040px, calc(100% - 40px)); margin: 0 auto; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; color: var(--muted); font-size: .9rem; }
+        .mark { color: var(--ink); font-weight: 800; letter-spacing: .08em; }
+        a { color: var(--teal); font-weight: 800; text-decoration: none; }
+        .topbar a { color: var(--ink); border-bottom: 1px solid var(--accent); }
+        h1, h2, h3, p { margin-top: 0; }
+        h1 { margin-bottom: 12px; font-family: Georgia, "Songti SC", serif; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 500; letter-spacing: -.02em; }
+        .intro { max-width: 680px; margin-bottom: 34px; color: var(--muted); }
+        .hint { color: var(--accent-dark); font-size: .85rem; font-weight: 800; letter-spacing: .12em; }
+
+        /* 选项卡容器 */
+        .tabs { margin: 0 0 56px; background: var(--card); border: 1px solid var(--line); box-shadow: 5px 5px 0 rgba(24,117,111,.12); }
+        .tab-list { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px 10px 0; border-bottom: 1px solid var(--line); background: rgba(24,117,111,.04); }
+        .tab {
+            padding: 14px 22px;
+            border: 0;
+            border-bottom: 3px solid transparent;
+            background: transparent;
+            color: var(--muted);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: color .2s ease, border-color .2s ease, background .2s ease;
+        }
+        .tab:hover { color: var(--teal); }
+        .tab:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; }
+        .tab.is-active { color: var(--accent-dark); border-bottom-color: var(--accent); background: var(--card); }
+
+        /* 面板内容 */
+        .tab-panels { padding: 26px 30px 30px; }
+        .panel[hidden] { display: none; }
+        .panel.is-active { animation: panel-in .25s ease both; }
+        @keyframes panel-in {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 18px; }
+        .panel-head h2 { margin-bottom: 0; font-family: Georgia, "Songti SC", serif; font-size: 1.5rem; font-weight: 500; }
+        .panel-head span { color: var(--muted); font-size: .85rem; }
+        .news-list { margin: 0; padding: 0; list-style: none; }
+        .news-list li { padding: 16px 0; border-top: 1px solid var(--line); }
+        .news-list li:first-child { border-top: 0; padding-top: 0; }
+        .news-list h3 { margin-bottom: 6px; font-size: 1.05rem; }
+        .news-list p { margin-bottom: 4px; color: var(--muted); font-size: .92rem; }
+        .news-list time { color: var(--teal); font-size: .8rem; font-weight: 800; letter-spacing: .04em; }
+        footer { padding: 22px 0 34px; color: var(--muted); border-top: 1px solid var(--line); font-size: .85rem; }
+        @media (max-width: 720px) {
+            .page { width: min(100% - 28px, 540px); }
+            .tab { padding: 12px 16px; font-size: .92rem; }
+            .tab-panels { padding: 20px 18px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="topbar">
+            <span class="mark">SSC / WEB DESIGN</span>
+            <a href="index.html">返回课堂实践首页</a>
+        </header>
+
+        <h1>新闻选项卡</h1>
+        <p class="intro">用一组选项卡切换四类新闻内容，默认显示「国内新闻」。切换逻辑写在外部文件 <strong>js/tabs.js</strong> 中，同一页面放多个选项组也能直接复用。</p>
+        <p class="hint">点击选项卡，或聚焦后用 ← → 键切换</p>
+
+        <!-- 选项卡本体：data-tabs 是可复用组件的初始化标记，data-tab-default 指定默认项 -->
+        <section class="tabs" data-tabs data-tab-default="tab-domestic">
+            <div class="tab-list" role="tablist" aria-label="新闻分类">
+                <button class="tab is-active" type="button" role="tab" id="tab-domestic"
+                        aria-controls="panel-domestic" aria-selected="true">国内新闻</button>
+                <button class="tab" type="button" role="tab" id="tab-province"
+                        aria-controls="panel-province" aria-selected="false">省内新闻</button>
+                <button class="tab" type="button" role="tab" id="tab-world"
+                        aria-controls="panel-world" aria-selected="false">国际新闻</button>
+                <button class="tab" type="button" role="tab" id="tab-hot"
+                        aria-controls="panel-hot" aria-selected="false">最热新闻</button>
+            </div>
+
+            <div class="tab-panels">
+                <!-- 国内新闻：默认展示的面板 -->
+                <section class="panel is-active" role="tabpanel" id="panel-domestic" aria-labelledby="tab-domestic">
+                    <div class="panel-head">
+                        <h2>国内新闻</h2>
+                        <span>示例内容 · 共 3 条</span>
+                    </div>
+                    <ul class="news-list">
+                        <li>
+                            <h3>多地推进城市更新，老旧小区改造进入新阶段</h3>
+                            <p>多个城市公布年度改造计划，重点补齐电梯、管网和无障碍设施等短板。</p>
+                            <time datetime="2026-11-02">2026-11-02</time>
+                        </li>
+                        <li>
+                            <h3>秋季学期校园体育活动陆续展开</h3>
+                            <p>各地中小学结合课后服务安排体育社团，鼓励学生每天保持规律锻炼。</p>
+                            <time datetime="2026-11-01">2026-11-01</time>
+                        </li>
+                        <li>
+                            <h3>公共交通支付方式进一步整合</h3>
+                            <p>部分城市试点统一乘车码，减少跨交通工具换乘时的重复扫码步骤。</p>
+                            <time datetime="2026-10-31">2026-10-31</time>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- 省内新闻 -->
+                <section class="panel" role="tabpanel" id="panel-province" aria-labelledby="tab-province" hidden>
+                    <div class="panel-head">
+                        <h2>省内新闻</h2>
+                        <span>示例内容 · 共 3 条</span>
+                    </div>
+                    <ul class="news-list">
+                        <li>
+                            <h3>省内高校开放实验室资源，服务周边中小学</h3>
+                            <p>多所高校在周末开放基础实验课程，供中学生预约体验。</p>
+                            <time datetime="2026-11-02">2026-11-02</time>
+                        </li>
+                        <li>
+                            <h3>省级图书馆推出冬季阅读计划</h3>
+                            <p>新增夜间开放时段，并配套推出面向青少年的主题书单。</p>
+                            <time datetime="2026-10-30">2026-10-30</time>
+                        </li>
+                        <li>
+                            <h3>本地农产品展销会本周末举行</h3>
+                            <p>展销会设置线上预订通道，方便居民提前下单、现场取货。</p>
+                            <time datetime="2026-10-28">2026-10-28</time>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- 国际新闻 -->
+                <section class="panel" role="tabpanel" id="panel-world" aria-labelledby="tab-world" hidden>
+                    <div class="panel-head">
+                        <h2>国际新闻</h2>
+                        <span>示例内容 · 共 3 条</span>
+                    </div>
+                    <ul class="news-list">
+                        <li>
+                            <h3>国际气候会议聚焦城市减排方案</h3>
+                            <p>与会代表围绕交通、建筑和能源三个方向交流城市的减排经验。</p>
+                            <time datetime="2026-11-01">2026-11-01</time>
+                        </li>
+                        <li>
+                            <h3>多国联合开展海洋生态考察</h3>
+                            <p>考察队将对近海生物多样性与塑料微粒分布进行为期数月的采样。</p>
+                            <time datetime="2026-10-29">2026-10-29</time>
+                        </li>
+                        <li>
+                            <h3>跨境铁路班列新增两条线路</h3>
+                            <p>新线路主要承运机械设备与日用消费品，运行时间较此前缩短。</p>
+                            <time datetime="2026-10-27">2026-10-27</time>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- 最热新闻 -->
+                <section class="panel" role="tabpanel" id="panel-hot" aria-labelledby="tab-hot" hidden>
+                    <div class="panel-head">
+                        <h2>最热新闻</h2>
+                        <span>示例内容 · 共 3 条</span>
+                    </div>
+                    <ul class="news-list">
+                        <li>
+                            <h3>大学生自制校园地图，标注无障碍通道</h3>
+                            <p>地图以网页形式呈现，使用者可按楼层筛选路线与休息点。</p>
+                            <time datetime="2026-11-02">2026-11-02</time>
+                        </li>
+                        <li>
+                            <h3>社区旧物交换活动受欢迎</h3>
+                            <p>居民用闲置书籍和文具换取所需物品，活动每月固定举办一次。</p>
+                            <time datetime="2026-11-01">2026-11-01</time>
+                        </li>
+                        <li>
+                            <h3>手写笔记在课堂上重新流行</h3>
+                            <p>部分教师建议学生用手写整理提纲，配合电子资料复习。</p>
+                            <time datetime="2026-10-30">2026-10-30</time>
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </section>
+
+        <footer>本页为《高级网页设计》课堂练习，上列新闻均为示例文本，不构成真实报道。</footer>
+    </div>
+
+    <!-- 选项卡逻辑放在外部 JS 文件，页面里只保留结构 -->
+    <script src="js/tabs.js"></script>
+</body>
+</html>
