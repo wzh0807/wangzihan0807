@@ -17,13 +17,27 @@ description: 提交本项目并推送到 GitHub 仓库。当用户要求提交�
 
 ## 操作步骤
 
-### 1. 验证 SSH 认证
+### 1. 确认提交身份（先做这一步）
+
+```bash
+git config user.name    # 应为 wzh
+git config user.email   # 应为 1987209495@qq.com
+```
+
+本仓库 `.git/config` 里有仓库级 `user.name=wangyao`，会覆盖全局的 `wzh`。若不是本人，先改：
+
+```bash
+git config --local user.name "wzh"
+git config --local user.email "1987209495@qq.com"
+```
+
+### 2. 验证 SSH 认证
 
 ```bash
 ssh -T git@github.com
 ```
 
-### 2. 配置 github 远程（保留原有的 gitee origin）
+### 3. 配置 github 远程（保留原有的 gitee origin）
 
 ```bash
 git remote add github git@github.com:wzh0807/wangzihan0807.git
@@ -31,23 +45,25 @@ git remote add github git@github.com:wzh0807/wangzihan0807.git
 git remote set-url github git@github.com:wzh0807/wangzihan0807.git
 ```
 
-### 3. 暂存明确的路径（禁止 `git add .`）
+### 4. 暂存明确的路径（禁止 `git add .`）
 
 ```bash
 git add -- AGENTS.md .opencode/skills 1/Untitled-1.html 1/self.html 1/catch-ball.html 1/catch-ball.css 1/catch-ball.js 1/dataTyp004.html 1/spec.md 1/l1 1/.trae "1/img/JS_obj-fun.html"
 ```
 
-### 4. 提交
+### 5. 提交
 
 ```bash
 git commit -m "提交高级网页设计项目并同步到GitHub"
 ```
 
-### 5. 推送
+### 6. 推送
 
 ```bash
 git push -u github master
 ```
+
+若只是修正作者身份，用 `git commit --amend --reset-author --no-edit` 后执行 `git push --force-with-lease github master`。
 
 ## 注意事项
 
@@ -55,4 +71,6 @@ git push -u github master
 - 不要提交任何带令牌的 URL 或文件：`.git/config` 的 origin 内嵌 Gitee 令牌，`.opencode/skills/*/SKILL.md` 中也含明文令牌；本项目技能文件不应再写入任何令牌。
 - 仓库约 554 MB（含 `2002120309曹炳宇/.../Git/` 中约 405 MB 的 Git for Windows）。单文件最大约 89 MB，低于 GitHub 的 100 MB 硬限制，但首次推送耗时较长，建议在后台执行。
 - 远端仓库为空时，首次 `push -u` 会创建 `master` 分支；之后直接用 `git push github master`。
-- 只改了部分文件时，把第 3 步路径换成实际改动路径。
+- 只改了部分文件时，把第 4 步路径换成实际改动路径。
+- 提交后作者显示成「王垚」而不是自己，是仓库级 `user.name=wangyao` 覆盖导致的（见第 1 步）；已推送的提交需 amend 后强行推送才能改。
+- GitHub 文件列表里旧文件的「上个月」是各自最后一次提交的时间，来自导入的原始历史，无法通过新提交改变；只有新提交碰过的文件才显示为当前时间。
