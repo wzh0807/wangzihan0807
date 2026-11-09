@@ -8,7 +8,7 @@
   建立时间：2026-11-09
   使用模型：Kimi-K3
   功能名称：扩展任务一 · 提示词工程师
-  功能简介：把 4 条 Swiper 配置需求"翻译"成提示词，记录两轮提示词与 AI 回答，并把 AI 产出的代码粘进页面实跑验证，附逐条验证结论与答辩抽问
+  功能简介：把 4 条 Swiper 配置需求"翻译"成提示词，记录两轮提示词与 AI 回答，并把 AI 产出的代码粘进页面实跑验证，附逐条验证结论
 -->
 <title>扩展任务一 · 提示词工程师 | 王子涵</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -65,11 +65,6 @@
   .wzh_swiper .wzh_cap p{font-size:12.5px;color:#dbe6f8;margin-top:3px}
   .wzh_swiper .swiper-pagination-bullet{background:#0f2b5b;opacity:.35}
   .wzh_swiper .swiper-pagination-bullet-active{background:#e8890c;opacity:1;width:22px;border-radius:6px}
-
-  /* 答辩问答 */
-  .wzh_qa{border:1px solid #e8ecf5;border-radius:12px;margin-bottom:12px;overflow:hidden}
-  .wzh_qa .wzh_q{background:#eef2ff;color:#0f2b5b;font-weight:bold;font-size:14.5px;padding:12px 18px}
-  .wzh_qa .wzh_a{padding:12px 18px;font-size:14px;color:#374151;line-height:2;background:#fff}
 
   .wzh_back{text-align:center;margin-top:28px}
   .wzh_back a{display:inline-block;text-decoration:none;color:#0f2b5b;font-size:14.5px;font-weight:bold;background:#fff;border:1px solid #dbe4ff;border-radius:999px;padding:10px 26px}
@@ -150,23 +145,6 @@
         </div>
         <div class="swiper-pagination" id="wzh_ppag"></div>
       </div>
-    </div>
-  </div>
-
-  <!-- 答辩抽问 -->
-  <div class="wzh_sec">
-    <h2>第五步 · 答辩抽问</h2>
-    <div class="wzh_qa">
-      <div class="wzh_q">问：你的第一版提示词漏掉了哪个需求？</div>
-      <div class="wzh_a">答：漏了两条——"手动操作后自动播放不停止"和"圆点可点击"。第 1 轮提示词只写了"自动翻页"和"圆点分页器"，没说清这两个限定条件，AI 就按 Swiper 的默认值给了：交互后停止播放、圆点只显示不可点。</div>
-    </div>
-    <div class="wzh_qa">
-      <div class="wzh_q">问：你是怎么在第二轮里"说清楚"的？</div>
-      <div class="wzh_a">答：先把第一轮的错点出来（"autoplay 默认交互后停止""圆点不可点"），再把 4 条需求逐条列全并要求"逐条对应"。给 AI 指出具体错误 + 完整重述需求，比只说一句"改一下"有效得多。</div>
-    </div>
-    <div class="wzh_qa">
-      <div class="wzh_q">问：AI 第一次给的代码错在哪？</div>
-      <div class="wzh_a">答：两个配置项缺失：<code>autoplay</code> 里少了 <code>disableOnInteraction: false</code>（导致手动操作后自动播放永久停止）；<code>pagination</code> 里少了 <code>clickable: true</code>（导致圆点无法点击跳转）。代码语法没错，是行为不满足需求——不看文档默认值、不做实跑验证就发现不了。</div>
     </div>
   </div>
 
