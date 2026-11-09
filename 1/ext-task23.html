@@ -8,7 +8,7 @@
   建立时间：2026-11-09
   使用模型：Kimi-K3
   功能名称：扩展任务二三 · creative 仿写与综合创作
-  功能简介：Swiper 扩展任务二（creative effect 仿写，prev 缩小左移带阴影 / next 右侧放大入场）与任务三（六件展品综合创作 + keyboard 方向键导航）的演示页
+  功能简介：Swiper 扩展任务二（creative effect 仿写，prev 缩小左移带阴影 / next 右侧放大入场）与任务三（六件展品综合创作 + keyboard 方向键导航）的演示页，含提示词原文、配置代码与需求参数对照表
 -->
 <title>扩展任务二三 · creative 仿写 + 综合创作 | 王子涵</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -58,6 +58,20 @@
   .wzh_swiper .swiper-pagination-bullet{background:#0f2b5b;opacity:.35}
   .wzh_swiper .swiper-pagination-bullet-active{background:#e8890c;opacity:1;width:22px;border-radius:6px}
 
+  /* 提示词块（与实验一同款） */
+  .wzh_tag{display:inline-block;font-size:12.5px;border-radius:999px;padding:3px 12px;margin-bottom:8px;background:#e8f0ff;color:#0f2b5b;border:1px solid #c7d8f8}
+  .wzh_prompt{background:#203d43;color:#eef4f3;border-left:5px solid #d66a45;border-radius:10px;padding:16px 20px;font-size:13.5px;line-height:2;white-space:pre-wrap;margin:6px 0 14px}
+
+  /* 代码块 */
+  .wzh_code{background:#1f2937;color:#d1fae5;border-radius:10px;padding:14px 16px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;white-space:pre-wrap;margin:12px 0;overflow-x:auto}
+
+  /* 需求→参数对照表（与实验一同款） */
+  .wzh_table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  .wzh_table th{background:#0f2b5b;color:#fff;padding:10px 14px;text-align:left;font-size:13px}
+  .wzh_table td{padding:10px 14px;border-bottom:1px solid #e8ecf5;color:#374151;line-height:1.8;vertical-align:top}
+  .wzh_table tr:nth-child(even) td{background:#f8faff}
+  .wzh_table td code{white-space:nowrap}
+
   .wzh_back{text-align:center;margin-top:28px}
   .wzh_back a{display:inline-block;text-decoration:none;color:#0f2b5b;font-size:14.5px;font-weight:bold;background:#fff;border:1px solid #dbe4ff;border-radius:999px;padding:10px 26px}
   footer{text-align:center;margin-top:34px;color:#9ca3af;font-size:13px;line-height:2}
@@ -84,6 +98,25 @@
       <p>初始化 <code>#wzh_esw1</code> 为 creative 效果：prev 缩小左移带阴影和 -12° 倾角，next 从右 100% 入场，循环播放，保留圆点分页器。</p>
       <span class="wzh_star">⭐ 验证标准：上一张缩小后往左退、下一张从右入场，像电影镜头的"拉远/推进"</span>
     </div>
+    <span class="wzh_tag">给 AI 的提示词</span>
+    <div class="wzh_prompt">用 Swiper 11 的 creative 效果初始化 #wzh_esw1：要求循环播放、切换 800ms；离场那张（prev）缩小左移 20%、带 -12° 倾角和阴影，入场那张（next）从右侧 100% 进场；保留可点击的圆点分页器 #wzh_epag1。注意 creative 不是预设效果，要用 creativeEffect 分别描述 prev 和 next 的 transform。</div>
+    <div class="wzh_code">new Swiper('#wzh_esw1', {
+  loop: true,
+  speed: 800,
+  effect: 'creative',
+  creativeEffect: {
+    prev: { shadow: true, translate: ['-20%', 0, -1], rotate: [0, 0, -12] },
+    next: { translate: ['100%', 0, 0] }
+  },
+  pagination: { el: '#wzh_epag1', clickable: true }
+});</div>
+    <table class="wzh_table">
+      <tr><th>想要的效果（中文）</th><th>对应参数</th><th>为什么是它</th></tr>
+      <tr><td>上一张缩小后往左退、带阴影</td><td><code>prev: { shadow: true, translate: ['-20%', 0, -1] }</code></td><td>prev 描述"离场"那张：x 方向 -20% 左移、z 轴 -1 压到下层、shadow 加投影。</td></tr>
+      <tr><td>离场时带一点倾斜</td><td><code>prev.rotate: [0, 0, -12]</code></td><td>rotate 三参数是 [x轴, y轴, z轴] 角度，z 轴 -12° 就是平面内倾斜。</td></tr>
+      <tr><td>下一张从右侧入场</td><td><code>next: { translate: ['100%', 0, 0] }</code></td><td>next 描述"入场"那张：从右 100% 位置推进来。</td></tr>
+      <tr><td>圆点能点击跳页</td><td><code>pagination: { clickable: true }</code></td><td>与实验一同一教训：只写 el 圆点只是显示器。</td></tr>
+    </table>
     <div class="wzh_demo">
       <span class="wzh_demo_tag">🎛️ 演示 · creative effect（拖动切换观察 transform 细节）</span>
       <div class="wzh_swiper">
@@ -113,6 +146,20 @@
       <p>初始化 <code>#wzh_esw2</code>：六张 slide（含爱达魔都号），保留 <code>#wzh_epag2</code> 圆点分页器，加 <code>keyboard: { enabled: true, onlyInViewport: false }</code>。</p>
       <span class="wzh_star">⭐ 验证标准：方向键 ← → 能翻页；最后一张爱达魔都号能看到"2024 年 1 月首航"</span>
     </div>
+    <span class="wzh_tag">给 AI 的提示词</span>
+    <div class="wzh_prompt">把轮播扩充到六张 slide，第六张是"爱达魔都号——2024 年 1 月首航，国产大型邮轮"；保留可点击圆点分页器 #wzh_epag2，并启用 keyboard 键盘导航，要求方向键在页面任意焦点下都能翻页（不只焦点在轮播上时）。</div>
+    <div class="wzh_code">new Swiper('#wzh_esw2', {
+  loop: true,
+  speed: 600,
+  keyboard: { enabled: true, onlyInViewport: false },
+  pagination: { el: '#wzh_epag2', clickable: true }
+});</div>
+    <table class="wzh_table">
+      <tr><th>想要的效果（中文）</th><th>对应参数</th><th>为什么是它</th></tr>
+      <tr><td>方向键 ← → 翻页</td><td><code>keyboard: { enabled: true }</code></td><td>keyboard 是独立模块，不写的话按键毫无反应。</td></tr>
+      <tr><td>焦点不在轮播上按键也生效</td><td><code>onlyInViewport: false</code></td><td>默认 true 时轮播滚出视口按键就失效，本页有两个轮播必须关掉。</td></tr>
+      <tr><td>第六件展品爱达魔都号</td><td>HTML 第六个 <code>swiper-slide</code></td><td>数据层扩充，与配置无关；图片由 AI 生成（aida_modu_1.jpg）。</td></tr>
+    </table>
     <div class="wzh_demo">
       <span class="wzh_demo_tag">🎛️ 演示 · 键盘 ← → 方向键翻页（请点进画面后按键）</span>
       <div class="wzh_swiper">
