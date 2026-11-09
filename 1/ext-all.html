@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--
+  作者：王子涵
+  建立时间：2026-11-09
+  使用模型：Kimi-K3
+  功能名称：扩展任务一二三 · 合订模板
+  功能简介：把扩展任务一（提示词工程：缺陷 vs 完善对比）、任务二（creative 仿写）、任务三（综合创作 + keyboard）合在一个页面，每个任务含提示词、配置代码、需求参数对照表与实跑演示
+-->
+<title>扩展任务一二三 · 合订模板 | 王子涵</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;background:#f6f8fc;color:#1f2937;line-height:1.8}
+  .wzh_wrap{max-width:980px;margin:0 auto;padding:40px 20px 60px}
+
+  /* 头部 */
+  .wzh_head{background:linear-gradient(135deg,#0f2b5b,#1d5bbf);border-radius:20px;padding:36px 38px;color:#fff;margin-bottom:26px;box-shadow:0 12px 30px rgba(15,43,91,.3)}
+  .wzh_head .wzh_badge{display:inline-block;padding:5px 14px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);font-size:13px;letter-spacing:2px;margin-bottom:14px}
+  .wzh_head h1{font-size:28px;letter-spacing:1px}
+  .wzh_head h1 b{color:#ffd166}
+  .wzh_head p{margin-top:12px;font-size:14.5px;color:#d9e3f5;line-height:2}
+
+  /* 章节卡 */
+  .wzh_sec{background:#fff;border-radius:18px;padding:28px 30px;margin-bottom:26px;border:1px solid #e8ecf5;box-shadow:0 4px 14px rgba(31,41,55,.06);position:relative;overflow:hidden}
+  .wzh_sec::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(#0f2b5b,#1d5bbf)}
+  .wzh_sec h2{font-size:19px;color:#111827;margin-bottom:14px}
+  .wzh_sec p{font-size:14.5px;color:#374151;line-height:2;margin-bottom:10px}
+  .wzh_sec code{background:#eef2ff;color:#1d4ed8;padding:1px 7px;border-radius:5px;font-family:Consolas,monospace;font-size:13px}
+
+  /* 提示词块 */
+  .wzh_tag{display:inline-block;font-size:12.5px;border-radius:999px;padding:3px 12px;margin-bottom:8px;background:#e8f0ff;color:#0f2b5b;border:1px solid #c7d8f8}
+  .wzh_prompt{background:#203d43;color:#eef4f3;border-left:5px solid #d66a45;border-radius:10px;padding:16px 20px;font-size:13.5px;line-height:2;white-space:pre-wrap;margin:6px 0 14px}
+
+  /* 代码块 */
+  .wzh_code{background:#1f2937;color:#d1fae5;border-radius:10px;padding:14px 16px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;white-space:pre-wrap;margin:12px 0;overflow-x:auto}
+  .wzh_card_bad .wzh_code{color:#fecaca}
+
+  /* 需求→参数对照表 */
+  .wzh_table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  .wzh_table th{background:#0f2b5b;color:#fff;padding:10px 14px;text-align:left;font-size:13px}
+  .wzh_table td{padding:10px 14px;border-bottom:1px solid #e8ecf5;color:#374151;line-height:1.8;vertical-align:top}
+  .wzh_table tr:nth-child(even) td{background:#f8faff}
+  .wzh_table td code{white-space:nowrap}
+
+  /* 缺陷 vs 完善 双栏对比（minmax(0,1fr)+min-width:0 防止 Swiper 在 grid 里宽度失控） */
+  .wzh_vs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:8px}
+  .wzh_card{border-radius:14px;padding:18px;border:1.5px solid;min-width:0}
+  .wzh_card_bad{background:#fef2f2;border-color:#fca5a5}
+  .wzh_card_good{background:#f0fdf4;border-color:#86efac}
+  .wzh_card_bad h3{font-size:15.5px;color:#b91c1c;margin-bottom:6px}
+  .wzh_card_good h3{font-size:15.5px;color:#15803d;margin-bottom:6px}
+  .wzh_card_bad p,.wzh_card_good p{font-size:13px;line-height:1.9;margin-bottom:10px}
+  .wzh_card_bad p{color:#991b1b}
+  .wzh_card_good p{color:#166534}
+  .wzh_card_tag{float:right;font-size:11.5px;border-radius:999px;padding:2px 10px}
+  .wzh_card_bad .wzh_card_tag{background:#dc2626;color:#fff}
+  .wzh_card_good .wzh_card_tag{background:#16a34a;color:#fff}
+
+  /* 迷你轮播 */
+  .wzh_mini{border-radius:12px;overflow:hidden;box-shadow:0 6px 16px rgba(15,43,91,.15)}
+  .wzh_mini .swiper-slide{position:relative;height:170px}
+  .wzh_mini .swiper-slide img{width:100%;height:100%;object-fit:cover;display:block}
+  .wzh_mini .wzh_cap{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 8px;color:#fff;background:linear-gradient(transparent,rgba(5,15,35,.85));font-size:13px;font-weight:bold;letter-spacing:1px}
+
+  /* 演示台 */
+  .wzh_demo_tag{display:inline-block;font-size:12.5px;color:#0f2b5b;background:#e8f0ff;border:1px solid #c7d8f8;border-radius:999px;padding:4px 14px;margin-bottom:12px}
+  .wzh_swiper{width:100%;max-width:760px;margin:0 auto}
+  .wzh_swiper .swiper{border-radius:16px;box-shadow:0 10px 26px rgba(15,43,91,.18)}
+  .wzh_swiper .swiper-slide{position:relative;height:290px}
+  .wzh_swiper .swiper-slide img{width:100%;height:100%;object-fit:cover;display:block}
+  .wzh_swiper .wzh_cap{position:absolute;left:0;right:0;bottom:0;padding:34px 20px 14px;color:#fff;background:linear-gradient(transparent,rgba(5,15,35,.82))}
+  .wzh_swiper .wzh_cap h3{font-size:18px;letter-spacing:1px}
+  .wzh_swiper .wzh_cap p{font-size:13px;color:#dbe6f8;margin-top:4px}
+  .swiper-pagination-bullet{background:#0f2b5b;opacity:.35}
+  .swiper-pagination-bullet-active{background:#e8890c;opacity:1;width:22px;border-radius:6px}
+
+  .wzh_back{text-align:center;margin-top:28px}
+  .wzh_back a{display:inline-block;text-decoration:none;color:#0f2b5b;font-size:14.5px;font-weight:bold;background:#fff;border:1px solid #dbe4ff;border-radius:999px;padding:10px 26px}
+  footer{text-align:center;margin-top:34px;color:#9ca3af;font-size:13px;line-height:2}
+  @media (max-width:640px){.wzh_vs{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wzh_wrap">
+
+  <div class="wzh_head">
+    <span class="wzh_badge">高 级 网 页 设 计 · 扩 展 任 务 一 二 三 · 合 订 模 板</span>
+    <h1>Swiper 扩展任务 <b>一 + 二 + 三</b></h1>
+    <p>任务一：提示词工程（缺陷 vs 完善实跑对比）｜任务二：creative 仿写｜任务三：综合创作 + keyboard 超纲。每个任务都按「提示词 → 配置代码 → 需求参数对照表 → 实跑演示」组织。</p>
+  </div>
+
+  <!-- ══════════ 任务一 · 提示词工程师 ══════════ -->
+  <div class="wzh_sec">
+    <h2>任务一 · 提示词工程师（让 AI 听懂需求）⭐⭐</h2>
+    <p>目标产物是一段 <code>new Swiper(...)</code> 配置，须满足 4 条需求：①无缝循环 ②3.2 秒自动翻页且手动后不停止 ③圆点可点击 ④初始效果 cube。</p>
+    <span class="wzh_tag">第 1 轮提示词</span>
+    <div class="wzh_prompt">帮我写一段 Swiper 11 的初始化代码，容器是 #wzh_demo，要求无缝循环、每 3.2 秒自动翻页，底部圆点分页器，初始切换效果用 cube。</div>
+    <span class="wzh_tag">第 2 轮提示词（发现缺陷后补说）</span>
+    <div class="wzh_prompt">上一轮有两个问题：1）autoplay 默认在用户交互后会停止，我要"手动操作后自动播放不停止"；2）圆点分页器必须能点击直接跳转，不能只显示。请按四条需求逐条对应，重新输出完整配置。</div>
+    <div class="wzh_vs">
+
+      <div class="wzh_card wzh_card_bad">
+        <h3><span class="wzh_card_tag">第 1 轮 · 缺陷</span>圆点只能看，不能点</h3>
+        <p>只写了"圆点分页器"，AI 理解为"把圆点画出来"，没给 <code>clickable</code>；autoplay 也漏了"手动后不停止"。<b>试试：拖一下，它就不再自己翻了。</b></p>
+        <div class="wzh_mini">
+          <div class="swiper" id="wzh_bad">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide"><img src="swiper-imgs/fuxing_1.jpg" alt="复兴号动车组"><div class="wzh_cap">复兴号动车组</div></div>
+              <div class="swiper-slide"><img src="swiper-imgs/tiangong_1.jpg" alt="天宫空间站"><div class="wzh_cap">天宫空间站</div></div>
+              <div class="swiper-slide"><img src="swiper-imgs/c919_1.jpg" alt="C919大飞机"><div class="wzh_cap">C919 大飞机</div></div>
+            </div>
+            <div class="swiper-pagination" id="wzh_pag_bad"></div>
+          </div>
+        </div>
+        <div class="wzh_code">new Swiper('#wzh_bad', {
+  loop: true,
+  autoplay: { delay: 3200 },
+  pagination: { el: '#wzh_pag_bad' },
+  effect: 'cube'
+});</div>
+      </div>
+
+      <div class="wzh_card wzh_card_good">
+        <h3><span class="wzh_card_tag">第 2 轮 · 完善</span>圆点是遥控器，不是装饰</h3>
+        <p>第 2 轮把需求说清楚，AI 补上 <code>clickable: true</code> 和 <code>disableOnInteraction: false</code>。<b>试试：点圆点跳页，拖完它照翻不误。</b></p>
+        <div class="wzh_mini">
+          <div class="swiper" id="wzh_good">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide"><img src="swiper-imgs/fuxing_1.jpg" alt="复兴号动车组"><div class="wzh_cap">复兴号动车组</div></div>
+              <div class="swiper-slide"><img src="swiper-imgs/tiangong_1.jpg" alt="天宫空间站"><div class="wzh_cap">天宫空间站</div></div>
+              <div class="swiper-slide"><img src="swiper-imgs/c919_1.jpg" alt="C919大飞机"><div class="wzh_cap">C919 大飞机</div></div>
+            </div>
+            <div class="swiper-pagination" id="wzh_pag_good"></div>
+          </div>
+        </div>
+        <div class="wzh_code">new Swiper('#wzh_good', {
+  loop: true,
+  autoplay: { delay: 3200, disableOnInteraction: false },
+  pagination: { el: '#wzh_pag_good', clickable: true },
+  effect: 'cube'
+});</div>
+      </div>
+
+    </div>
+    <table class="wzh_table">
+      <tr><th>需求（中文）</th><th>对应参数</th><th>为什么是它</th></tr>
+      <tr><td>① 无缝循环</td><td><code>loop: true</code></td><td>最后一张再往后翻直接回第一张，不卡住不留白。</td></tr>
+      <tr><td>② 3.2 秒自动翻页，手动后不停止</td><td><code>autoplay: { delay: 3200, disableOnInteraction: false }</code></td><td>delay 单位是毫秒；默认交互后自动播放会停，必须显式关掉。</td></tr>
+      <tr><td>③ 圆点分页器可点击</td><td><code>pagination: { el: '…', clickable: true }</code></td><td>只写 el 圆点只是"显示器"，加 clickable 才是"遥控器"。</td></tr>
+      <tr><td>④ 初始效果为 cube</td><td><code>effect: 'cube'</code></td><td>不写 effect 默认是平推 slide，题目指定 3D 立方体。</td></tr>
+    </table>
+  </div>
+
+  <!-- ══════════ 任务二 · creative 仿写 ══════════ -->
+  <div class="wzh_sec">
+    <h2>任务二 · creative 仿写（transform 自由组合）</h2>
+    <p><code>creativeEffect.prev</code> 控制<strong>离场</strong>那张：缩小左移带 -12° 倾角与阴影；<code>creativeEffect.next</code> 控制<strong>入场</strong>那张：从右侧 100% 进场。</p>
+    <span class="wzh_tag">给 AI 的提示词</span>
+    <div class="wzh_prompt">用 Swiper 11 的 creative 效果初始化 #wzh_esw1：要求循环播放、切换 800ms；离场那张（prev）缩小左移 20%、带 -12° 倾角和阴影，入场那张（next）从右侧 100% 进场；保留可点击的圆点分页器 #wzh_epag1。注意 creative 不是预设效果，要用 creativeEffect 分别描述 prev 和 next 的 transform。</div>
+    <div class="wzh_code">new Swiper('#wzh_esw1', {
+  loop: true,
+  speed: 800,
+  effect: 'creative',
+  creativeEffect: {
+    prev: { shadow: true, translate: ['-20%', 0, -1], rotate: [0, 0, -12] },
+    next: { translate: ['100%', 0, 0] }
+  },
+  pagination: { el: '#wzh_epag1', clickable: true }
+});</div>
+    <table class="wzh_table">
+      <tr><th>想要的效果（中文）</th><th>对应参数</th><th>为什么是它</th></tr>
+      <tr><td>上一张缩小后往左退、带阴影</td><td><code>prev: { shadow: true, translate: ['-20%', 0, -1] }</code></td><td>x 方向 -20% 左移、z 轴 -1 压到下层、shadow 加投影。</td></tr>
+      <tr><td>离场时带一点倾斜</td><td><code>prev.rotate: [0, 0, -12]</code></td><td>rotate 三参数是 [x轴, y轴, z轴] 角度，z 轴 -12° 即平面内倾斜。</td></tr>
+      <tr><td>下一张从右侧入场</td><td><code>next: { translate: ['100%', 0, 0] }</code></td><td>next 描述"入场"那张：从右 100% 位置推进来。</td></tr>
+    </table>
+    <span class="wzh_demo_tag">🎛️ 演示 · creative effect（拖动切换观察 transform 细节）</span>
+    <div class="wzh_swiper">
+      <div class="swiper" id="wzh_esw1">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide"><img src="swiper-imgs/tiangong_1.jpg" alt="天宫空间站"><div class="wzh_cap"><h3>天宫空间站</h3><p>creative：prev 离场缩小 + next 入场放大</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/fuxing_1.jpg" alt="复兴号动车组"><div class="wzh_cap"><h3>复兴号动车组</h3><p>试试拖动切换，观察 transform 细节</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/c919_1.jpg" alt="C919大飞机"><div class="wzh_cap"><h3>C919 大飞机</h3><p>把 prev 的 translate 改个数字试试</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/fendouzhe_1.jpg" alt="奋斗者号"><div class="wzh_cap"><h3>奋斗者号</h3><p>rotate:[0,0,-12] 让离场带倾角</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/fast_1.jpg" alt="中国天眼"><div class="wzh_cap"><h3>中国天眼 FAST</h3><p>只写 translate 或只写 rotate 都可以</p></div></div>
+        </div>
+        <div class="swiper-pagination" id="wzh_epag1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 任务三 · 综合创作 + keyboard ══════════ -->
+  <div class="wzh_sec">
+    <h2>任务三 · 综合创作 + keyboard 键盘导航</h2>
+    <p>六件展品（新增<b>爱达魔都号</b>——2024 年 1 月首航，国产大型邮轮），并启用 <code>keyboard</code> 模块，方向键 ← → 在任意焦点下翻页。</p>
+    <span class="wzh_tag">给 AI 的提示词</span>
+    <div class="wzh_prompt">把轮播扩充到六张 slide，第六张是"爱达魔都号——2024 年 1 月首航，国产大型邮轮"；保留可点击圆点分页器 #wzh_epag2，并启用 keyboard 键盘导航，要求方向键在页面任意焦点下都能翻页（不只焦点在轮播上时）。</div>
+    <div class="wzh_code">new Swiper('#wzh_esw2', {
+  loop: true,
+  speed: 600,
+  keyboard: { enabled: true, onlyInViewport: false },
+  pagination: { el: '#wzh_epag2', clickable: true }
+});</div>
+    <table class="wzh_table">
+      <tr><th>想要的效果（中文）</th><th>对应参数</th><th>为什么是它</th></tr>
+      <tr><td>方向键 ← → 翻页</td><td><code>keyboard: { enabled: true }</code></td><td>keyboard 是独立模块，不写的话按键毫无反应。</td></tr>
+      <tr><td>焦点不在轮播上按键也生效</td><td><code>onlyInViewport: false</code></td><td>默认 true 时轮播滚出视口按键就失效，本页有多个轮播必须关掉。</td></tr>
+      <tr><td>第六件展品爱达魔都号</td><td>HTML 第六个 <code>swiper-slide</code></td><td>数据层扩充，与配置无关；图片由 AI 生成（aida_modu_1.jpg）。</td></tr>
+    </table>
+    <span class="wzh_demo_tag">🎛️ 演示 · 键盘 ← → 方向键翻页（请点进画面后按键）</span>
+    <div class="wzh_swiper">
+      <div class="swiper" id="wzh_esw2">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide"><img src="swiper-imgs/tiangong_1.jpg" alt="天宫空间站"><div class="wzh_cap"><h3>天宫空间站</h3><p>2022 年全面建成 · 中国人的太空家园</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/fuxing_1.jpg" alt="复兴号动车组"><div class="wzh_cap"><h3>复兴号动车组</h3><p>350 km/h · 世界商业运营最高时速</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/c919_1.jpg" alt="C919大飞机"><div class="wzh_cap"><h3>C919 大飞机</h3><p>2023 年商业首航 · 国产干线客机翱翔蓝天</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/fendouzhe_1.jpg" alt="奋斗者号"><div class="wzh_cap"><h3>奋斗者号</h3><p>10909 米 · 触碰地球第四极马里亚纳海沟</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/fast_1.jpg" alt="中国天眼"><div class="wzh_cap"><h3>中国天眼 FAST</h3><p>500 米口径 · 世界最大单口径射电望远镜</p></div></div>
+          <div class="swiper-slide"><img src="swiper-imgs/aida_modu_1.jpg" alt="爱达魔都号大型邮轮"><div class="wzh_cap"><h3>爱达魔都号</h3><p>2024 年 1 月首航 · 国产大型邮轮 · 中国造船史上的里程碑</p></div></div>
+        </div>
+        <div class="swiper-pagination" id="wzh_epag2"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wzh_back"><a href="../index.html">← 返回课堂实践首页</a>　<a href="ext-task1.html">任务一单页</a>　<a href="ext-task23.html">任务二三单页</a></div>
+  <footer>扩展任务一二三 · 合订模板 · 高级网页设计 · 王子涵 · 2026-2027-1</footer>
+</div>
+
+<script>
+  // ── 任务一：缺陷轮播（#wzh_bad），原样使用第 1 轮 AI 的错漏配置，演示缺陷 ──
+  new Swiper('#wzh_bad', {
+    loop: true,
+    autoplay: { delay: 3200 },
+    pagination: { el: '#wzh_pag_bad' },
+    effect: 'cube'
+  });
+
+  // ── 任务一：完善轮播（#wzh_good），第 2 轮修正后的完整配置 ──
+  new Swiper('#wzh_good', {
+    loop: true,
+    autoplay: { delay: 3200, disableOnInteraction: false },
+    pagination: { el: '#wzh_pag_good', clickable: true },
+    effect: 'cube'
+  });
+
+  // ── 任务二：creative 仿写轮播（#wzh_esw1），prev/next 分别描述离场与入场 transform ──
+  new Swiper('#wzh_esw1', {
+    loop: true,
+    speed: 800,
+    effect: 'creative',
+    creativeEffect: {
+      prev: { shadow: true, translate: ['-20%', 0, -1], rotate: [0, 0, -12] },
+      next: { translate: ['100%', 0, 0] }
+    },
+    pagination: { el: '#wzh_epag1', clickable: true }
+  });
+
+  // ── 任务三：综合创作轮播（#wzh_esw2），keyboard 方向键在任意焦点下翻页 ──
+  new Swiper('#wzh_esw2', {
+    loop: true,
+    speed: 600,
+    keyboard: { enabled: true, onlyInViewport: false },
+    pagination: { el: '#wzh_epag2', clickable: true }
+  });
+</script>
+</body>
+</html>
