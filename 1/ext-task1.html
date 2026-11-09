@@ -7,8 +7,8 @@
   作者：王子涵
   建立时间：2026-11-09
   使用模型：Kimi-K3
-  功能名称：扩展任务一 · 提示词工程师
-  功能简介：把 4 条 Swiper 配置需求"翻译"成提示词，记录两轮提示词与 AI 回答，并把 AI 产出的代码粘进页面实跑验证，附逐条验证结论
+  功能名称：扩展任务一 · 提示词工程师（缺陷 vs 完善对比）
+  功能简介：把 4 条 Swiper 配置需求翻译成提示词，页面并排实跑"缺陷轮播"（第 1 轮 AI 的错漏答案）与"完善轮播"（第 2 轮正确配置），附提示词原文、代码对比与中文需求参数对照表
 -->
 <title>扩展任务一 · 提示词工程师 | 王子涵</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
@@ -16,7 +16,7 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;background:#f6f8fc;color:#1f2937;line-height:1.8}
-  .wzh_wrap{max-width:900px;margin:0 auto;padding:40px 20px 60px}
+  .wzh_wrap{max-width:980px;margin:0 auto;padding:40px 20px 60px}
 
   /* 头部 */
   .wzh_head{background:linear-gradient(135deg,#0f2b5b,#1d5bbf);border-radius:20px;padding:36px 38px;color:#fff;margin-bottom:26px;box-shadow:0 12px 30px rgba(15,43,91,.3)}
@@ -29,47 +29,51 @@
   .wzh_sec{background:#fff;border-radius:18px;padding:28px 30px;margin-bottom:26px;border:1px solid #e8ecf5;box-shadow:0 4px 14px rgba(31,41,55,.06);position:relative;overflow:hidden}
   .wzh_sec::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(#0f2b5b,#1d5bbf)}
   .wzh_sec h2{font-size:19px;color:#111827;margin-bottom:14px}
-  .wzh_sec h3{font-size:15.5px;color:#0f2b5b;margin:18px 0 8px}
   .wzh_sec p{font-size:14.5px;color:#374151;line-height:2;margin-bottom:10px}
   .wzh_sec code{background:#eef2ff;color:#1d4ed8;padding:1px 7px;border-radius:5px;font-family:Consolas,monospace;font-size:13px}
 
-  /* 需求拆解 4 卡片 */
-  .wzh_needs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:12px 0}
-  .wzh_need{background:#f8faff;border:1px solid #dbe4ff;border-radius:12px;padding:14px 16px;font-size:14px;color:#374151;line-height:1.9}
-  .wzh_need b{display:block;color:#0f2b5b;margin-bottom:4px}
-  .wzh_need i{font-style:normal;display:inline-block;background:#1d5bbf;color:#fff;border-radius:6px;padding:0 8px;font-size:12.5px;margin-right:6px}
-
-  /* 提示词块与 AI 回答块 */
+  /* 提示词块 */
   .wzh_tag{display:inline-block;font-size:12.5px;border-radius:999px;padding:3px 12px;margin-bottom:8px}
   .wzh_tag_me{background:#e8f0ff;color:#0f2b5b;border:1px solid #c7d8f8}
-  .wzh_tag_ai{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
-  .wzh_prompt{background:#203d43;color:#eef4f3;border-left:5px solid #d66a45;border-radius:10px;padding:16px 20px;font-size:13.5px;line-height:2;white-space:pre-wrap;margin:6px 0 14px}
-  .wzh_ai{background:#1f2937;color:#d1fae5;border-left:5px solid #16a34a;border-radius:10px;padding:16px 20px;font-family:Consolas,monospace;font-size:13px;line-height:1.9;white-space:pre-wrap;margin:6px 0 14px;overflow-x:auto}
-  .wzh_wrong{background:#fef2f2;border:1.5px dashed #dc2626;border-radius:12px;padding:14px 18px;margin:10px 0;font-size:13.5px;color:#991b1b;line-height:2}
-  .wzh_wrong b{color:#b91c1c}
-  .wzh_ok{background:#f0fdf4;border:1.5px dashed #16a34a;border-radius:12px;padding:14px 18px;margin:10px 0;font-size:13.5px;color:#166534;line-height:2}
-  .wzh_ok b{color:#15803d}
+  .wzh_prompt{background:#203d43;color:#eef4f3;border-left:5px solid #d66a45;border-radius:10px;padding:16px 20px;font-size:13.5px;line-height:2;white-space:pre-wrap;margin:6px 0 16px}
 
-  /* 验证清单 */
-  .wzh_check{list-style:none;margin:12px 0}
-  .wzh_check li{display:flex;gap:10px;align-items:flex-start;background:#f8faff;border:1px solid #dbe4ff;border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:14px;color:#374151;line-height:1.9}
-  .wzh_check .wzh_mark{flex:none;width:24px;height:24px;border-radius:50%;background:#16a34a;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;margin-top:3px}
+  /* 缺陷 vs 完善 双栏对比 */
+  .wzh_vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  .wzh_card{border-radius:14px;padding:18px;border:1.5px solid}
+  .wzh_card_bad{background:#fef2f2;border-color:#fca5a5}
+  .wzh_card_good{background:#f0fdf4;border-color:#86efac}
+  .wzh_card_bad h3{font-size:15.5px;color:#b91c1c;margin-bottom:6px}
+  .wzh_card_good h3{font-size:15.5px;color:#15803d;margin-bottom:6px}
+  .wzh_card_bad p,.wzh_card_good p{font-size:13px;line-height:1.9;margin-bottom:10px}
+  .wzh_card_bad p{color:#991b1b}
+  .wzh_card_good p{color:#166534}
+  .wzh_card_tag{float:right;font-size:11.5px;border-radius:999px;padding:2px 10px}
+  .wzh_card_bad .wzh_card_tag{background:#dc2626;color:#fff}
+  .wzh_card_good .wzh_card_tag{background:#16a34a;color:#fff}
 
-  /* 演示台 */
-  .wzh_swiper{width:100%;max-width:680px;margin:14px auto 4px}
-  .wzh_swiper .swiper{border-radius:16px;box-shadow:0 10px 26px rgba(15,43,91,.18)}
-  .wzh_swiper .swiper-slide{position:relative;height:270px}
-  .wzh_swiper .swiper-slide img{width:100%;height:100%;object-fit:cover;display:block}
-  .wzh_swiper .wzh_cap{position:absolute;left:0;right:0;bottom:0;padding:30px 18px 12px;color:#fff;background:linear-gradient(transparent,rgba(5,15,35,.82))}
-  .wzh_swiper .wzh_cap h3{font-size:17px;letter-spacing:1px}
-  .wzh_swiper .wzh_cap p{font-size:12.5px;color:#dbe6f8;margin-top:3px}
-  .wzh_swiper .swiper-pagination-bullet{background:#0f2b5b;opacity:.35}
-  .wzh_swiper .swiper-pagination-bullet-active{background:#e8890c;opacity:1;width:22px;border-radius:6px}
+  /* 迷你轮播 */
+  .wzh_mini{border-radius:12px;overflow:hidden;box-shadow:0 6px 16px rgba(15,43,91,.15)}
+  .wzh_mini .swiper-slide{position:relative;height:170px}
+  .wzh_mini .swiper-slide img{width:100%;height:100%;object-fit:cover;display:block}
+  .wzh_mini .wzh_cap{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 8px;color:#fff;background:linear-gradient(transparent,rgba(5,15,35,.85));font-size:13px;font-weight:bold;letter-spacing:1px}
+  .wzh_mini .swiper-pagination-bullet{background:#0f2b5b;opacity:.35}
+  .wzh_mini .swiper-pagination-bullet-active{background:#e8890c;opacity:1;width:18px;border-radius:5px}
+
+  /* 代码块 */
+  .wzh_code{background:#1f2937;color:#d1fae5;border-radius:10px;padding:14px 16px;font-family:Consolas,monospace;font-size:12.5px;line-height:1.9;white-space:pre-wrap;margin-top:12px;overflow-x:auto}
+  .wzh_card_bad .wzh_code{color:#fecaca}
+
+  /* 需求→参数对照表 */
+  .wzh_table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+  .wzh_table th{background:#0f2b5b;color:#fff;padding:10px 14px;text-align:left;font-size:13px}
+  .wzh_table td{padding:10px 14px;border-bottom:1px solid #e8ecf5;color:#374151;line-height:1.8;vertical-align:top}
+  .wzh_table tr:nth-child(even) td{background:#f8faff}
+  .wzh_table td code{white-space:nowrap}
 
   .wzh_back{text-align:center;margin-top:28px}
   .wzh_back a{display:inline-block;text-decoration:none;color:#0f2b5b;font-size:14.5px;font-weight:bold;background:#fff;border:1px solid #dbe4ff;border-radius:999px;padding:10px 26px}
   footer{text-align:center;margin-top:34px;color:#9ca3af;font-size:13px;line-height:2}
-  @media (max-width:640px){.wzh_needs{grid-template-columns:1fr}}
+  @media (max-width:720px){.wzh_vs{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -78,74 +82,82 @@
   <div class="wzh_head">
     <span class="wzh_badge">高 级 网 页 设 计 · 扩 展 任 务 一 · ⭐ ⭐</span>
     <h1>提示词工程师 · <b>让 AI 听懂需求</b></h1>
-    <p>本任务<b>不写代码，写提示词</b>：把 4 条 Swiper 配置需求翻译给 AI，迭代两轮提示词，保留每轮提示词与 AI 回答，再把 AI 产出的代码粘进本页实跑验证。</p>
+    <p>本任务<b>不写代码，写提示词</b>：把 4 条 Swiper 配置需求翻译给 AI。下面两个轮播的 HTML 完全一样，只有 JS 配置差两行——<b>左边是第 1 轮的缺陷答案，右边是第 2 轮的完善答案</b>，亲手点一点、拖一拖就知道差别。</p>
   </div>
 
-  <!-- 需求拆解 -->
+  <!-- ① 提示词 -->
   <div class="wzh_sec">
-    <h2>第一步 · 需求拆解（要翻译给 AI 的 4 条需求）</h2>
-    <p>目标产物是一段 <code>new Swiper('#wzh_pw4', { ... })</code> 配置代码，必须同时满足：</p>
-    <div class="wzh_needs">
-      <div class="wzh_need"><b><i>①</i>无缝循环</b>最后一张再往后翻要回到第一张，不能卡住或留白。</div>
-      <div class="wzh_need"><b><i>②</i>3.2 秒自动翻页 · 手动后不停止</b>每 3.2 秒自己翻页；用户拖动/点击之后自动播放还要继续。</div>
-      <div class="wzh_need"><b><i>③</i>圆点分页器可点击</b>底部圆点能反映当前位置，并且点圆点可以直接跳转。</div>
-      <div class="wzh_need"><b><i>④</i>初始效果为 cube</b>切换效果是 3D 立方体，不是默认的平推 slide。</div>
-    </div>
+    <h2>① 提示词（两轮原文）</h2>
+    <span class="wzh_tag wzh_tag_me">第 1 轮提示词</span>
+    <div class="wzh_prompt">帮我写一段 Swiper 11 的初始化代码，容器是 #wzh_demo，要求无缝循环、每 3.2 秒自动翻页，底部圆点分页器，初始切换效果用 cube。</div>
+    <span class="wzh_tag wzh_tag_me">第 2 轮提示词（发现缺陷后补说）</span>
+    <div class="wzh_prompt">上一轮有两个问题：1）autoplay 默认在用户交互后会停止，我要"手动操作后自动播放不停止"；2）圆点分页器必须能点击直接跳转，不能只显示。请按四条需求逐条对应，重新输出完整配置。</div>
   </div>
 
-  <!-- 第一轮提示词 -->
+  <!-- ② 缺陷 vs 完善 实跑对比 -->
   <div class="wzh_sec">
-    <h2>第二步 · 第 1 轮提示词（有遗漏，AI 答错）</h2>
-    <span class="wzh_tag wzh_tag_me">我的提示词 · 第 1 轮</span>
-    <div class="wzh_prompt">帮我写一段 Swiper 11 的初始化代码，容器是 #wzh_pw4，要求无缝循环、每 3.2 秒自动翻页，底部圆点分页器，初始切换效果用 cube。</div>
-    <span class="wzh_tag wzh_tag_ai">AI 回答 · 第 1 轮</span>
-    <div class="wzh_ai">new Swiper('#wzh_pw4', {
+    <h2>② 缺陷轮播 vs 完善轮播（同一批照片，实跑对比）</h2>
+    <p>左边只能看——拖一下自动播放就罢工、圆点点不动；右边全修好——拖完接着自动翻、圆点是遥控器。差异就在下方代码块里。</p>
+    <div class="wzh_vs">
+
+      <!-- 缺陷部分 -->
+      <div class="wzh_card wzh_card_bad">
+        <h3><span class="wzh_card_tag">第 1 轮 · 缺陷</span>圆点只能看，不能点</h3>
+        <p>第 1 轮提示词只写了"圆点分页器"，AI 理解为"把圆点画出来"，于是只给了 <code>el</code>，没给 <code>clickable</code>；autoplay 也漏了"手动后不停止"。<b>试试：拖一下，它就不再自己翻了。</b></p>
+        <div class="wzh_mini">
+          <div class="swiper" id="wzh_bad">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide"><img src="swiper-imgs/fuxing_1.jpg" alt="复兴号动车组"><div class="wzh_cap">复兴号动车组</div></div>
+              <div class="swiper-slide"><img src="swiper-imgs/tiangong_1.jpg" alt="天宫空间站"><div class="wzh_cap">天宫空间站</div></div>
+              <div class="swiper-slide"><img src="swiper-imgs/c919_1.jpg" alt="C919大飞机"><div class="wzh_cap">C919 大飞机</div></div>
+            </div>
+            <div class="swiper-pagination" id="wzh_pag_bad"></div>
+          </div>
+        </div>
+        <div class="wzh_code">new Swiper('#wzh_bad', {
   loop: true,
   autoplay: { delay: 3200 },
-  pagination: { el: '.swiper-pagination' },
+  pagination: { el: '#wzh_pag_bad' },
   effect: 'cube'
 });</div>
-    <div class="wzh_wrong"><b>对照 4 条需求逐一核对，这轮回答有 2 处错漏：</b><br>
-    ✗ <b>漏了"手动操作后不停止"</b>：autoplay 缺 <code>disableOnInteraction: false</code>，用户拖一下自动播放就永久停了（Swiper 默认 true 即停止）；<br>
-    ✗ <b>圆点不可点击</b>：pagination 缺 <code>clickable: true</code>，圆点只显示不能点击跳转，不满足需求 ③。</div>
-  </div>
+      </div>
 
-  <!-- 第二轮提示词 -->
-  <div class="wzh_sec">
-    <h2>第三步 · 第 2 轮提示词（把遗漏"说清楚"）</h2>
-    <span class="wzh_tag wzh_tag_me">我的提示词 · 第 2 轮</span>
-    <div class="wzh_prompt">上一轮的回答有两个问题：1）autoplay 默认在用户交互后会停止，请加上"手动操作后自动播放不停止"的配置；2）圆点分页器需要可以点击跳转。请重新输出完整代码，四条需求逐条对应：无缝循环、3.2 秒自动翻页且手动后不停止、圆点可点击、初始效果 cube。</div>
-    <span class="wzh_tag wzh_tag_ai">AI 回答 · 第 2 轮（正确）</span>
-    <div class="wzh_ai">new Swiper('#wzh_pw4', {
+      <!-- 完善部分 -->
+      <div class="wzh_card wzh_card_good">
+        <h3><span class="wzh_card_tag">第 2 轮 · 完善</span>圆点是遥控器，不是装饰</h3>
+        <p>第 2 轮把需求说清楚——"圆点必须能点击直接跳转"+"手动操作后自动播放不停止"，同一个 AI 立刻补上 <code>clickable: true</code> 和 <code>disableOnInteraction: false</code>。<b>试试：点圆点跳页，拖完它照翻不误。</b></p>
+        <div class="wzh_mini">
+          <div class="swiper" id="wzh_good">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide"><img src="swiper-imgs/fuxing_1.jpg" alt="复兴号动车组"><div class="wzh_cap">复兴号动车组</div></div>
+              <div class="swiper-slide"><img src="swiper-imgs/tiangong_1.jpg" alt="天宫空间站"><div class="wzh_cap">天宫空间站</div></div>
+              <div class="swiper-slide"><img src="swiper-imgs/c919_1.jpg" alt="C919大飞机"><div class="wzh_cap">C919 大飞机</div></div>
+            </div>
+            <div class="swiper-pagination" id="wzh_pag_good"></div>
+          </div>
+        </div>
+        <div class="wzh_code">new Swiper('#wzh_good', {
   loop: true,
   autoplay: { delay: 3200, disableOnInteraction: false },
-  pagination: { el: '.swiper-pagination', clickable: true },
+  pagination: { el: '#wzh_pag_good', clickable: true },
   effect: 'cube'
 });</div>
-    <div class="wzh_ok"><b>逐条核对：</b>① <code>loop:true</code> 无缝循环 ✓　② <code>delay:3200</code> + <code>disableOnInteraction:false</code> 自动翻页且手动后不停 ✓　③ <code>clickable:true</code> 圆点可点 ✓　④ <code>effect:'cube'</code> 3D 立方体 ✓</div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- 验证区 -->
+  <!-- ③ 中文需求翻译成参数 -->
   <div class="wzh_sec">
-    <h2>第四步 · 粘进页面亲自验证（下方就是 AI 第 2 轮代码的实跑结果）</h2>
-    <p>下面这个轮播就是用 AI 第 2 轮回答的配置初始化的（本页底部 <code>&lt;script&gt;</code> 里原样粘贴），可亲手验证：</p>
-    <ul class="wzh_check">
-      <li><span class="wzh_mark">✓</span><span><b>需求① 无缝循环</b> —— 结论：翻到最后一张再往后点，直接回到第一张，无卡顿留白，通过。</span></li>
-      <li><span class="wzh_mark">✓</span><span><b>需求② 3.2 秒自动翻页、手动后不停止</b> —— 结论：静置约 3.2 秒自动翻页；拖一下松手，等几秒它继续自动翻，通过。</span></li>
-      <li><span class="wzh_mark">✓</span><span><b>需求③ 圆点可点击</b> —— 点第 3 个圆点立即跳到第 3 张，通过。</span></li>
-      <li><span class="wzh_mark">✓</span><span><b>需求④ 初始效果 cube</b> —— 翻页时照片呈 3D 立方体旋转切换，通过。</span></li>
-    </ul>
-    <div class="wzh_swiper">
-      <div class="swiper" id="wzh_pw4">
-        <div class="swiper-wrapper">
-          <div class="swiper-slide"><img src="swiper-imgs/tiangong_1.jpg" alt="天宫空间站"><div class="wzh_cap"><h3>天宫空间站</h3><p>验证需求 ①②③④ · cube 效果实跑中</p></div></div>
-          <div class="swiper-slide"><img src="swiper-imgs/fuxing_1.jpg" alt="复兴号动车组"><div class="wzh_cap"><h3>复兴号动车组</h3><p>拖我一下，看自动翻页停不停</p></div></div>
-          <div class="swiper-slide"><img src="swiper-imgs/c919_1.jpg" alt="C919大飞机"><div class="wzh_cap"><h3>C919 大飞机</h3><p>点下方圆点可以直接跳到我</p></div></div>
-          <div class="swiper-slide"><img src="swiper-imgs/aida_modu_1.jpg" alt="爱达魔都号大型邮轮"><div class="wzh_cap"><h3>爱达魔都号</h3><p>最后一张，再往后翻回到第一张</p></div></div>
-        </div>
-        <div class="swiper-pagination" id="wzh_ppag"></div>
-      </div>
-    </div>
+    <h2>③ 把中文需求翻译成参数</h2>
+    <p>需求是中文的，Swiper 只认参数。这张表就是这次"翻译"的词典：</p>
+    <table class="wzh_table">
+      <tr><th>老师的需求（中文）</th><th>对应参数</th><th>为什么是它</th></tr>
+      <tr><td>① 无缝循环</td><td><code>loop: true</code></td><td>最后一张再往后翻直接回第一张，不卡住不留白。</td></tr>
+      <tr><td>② 3.2 秒自动翻页，手动后不停止</td><td><code>autoplay: { delay: 3200, disableOnInteraction: false }</code></td><td>delay 单位是毫秒；默认交互后自动播放会停，必须显式关掉这个默认行为。</td></tr>
+      <tr><td>③ 圆点分页器可点击</td><td><code>pagination: { el: '…', clickable: true }</code></td><td>只写 el 圆点只是"显示器"，加 clickable 才是"遥控器"。</td></tr>
+      <tr><td>④ 初始效果为 cube</td><td><code>effect: 'cube'</code></td><td>不写 effect 默认是平推 slide，题目指定 3D 立方体。</td></tr>
+    </table>
   </div>
 
   <div class="wzh_back"><a href="../index.html">← 返回课堂实践首页</a>　<a href="ext-task23.html">扩展任务二三 →</a></div>
@@ -153,12 +165,21 @@
 </div>
 
 <script>
-  // ── 功能：用 AI 第 2 轮回答的配置初始化验证轮播（#wzh_pw4）──
-  // 这段配置就是"AI 回答 · 第 2 轮"的原文，原样粘贴以实跑验证 4 条需求
-  new Swiper('#wzh_pw4', {
+  // ── 功能：初始化"缺陷轮播"（#wzh_bad），原样使用第 1 轮 AI 的错漏配置 ──
+  // 故意不加 disableOnInteraction 与 clickable，用于演示缺陷：拖动后自动播放停止、圆点不可点
+  new Swiper('#wzh_bad', {
+    loop: true,
+    autoplay: { delay: 3200 },
+    pagination: { el: '#wzh_pag_bad' },
+    effect: 'cube'
+  });
+
+  // ── 功能：初始化"完善轮播"（#wzh_good），使用第 2 轮修正后的完整配置 ──
+  // disableOnInteraction:false 保证手动操作后自动播放继续；clickable:true 让圆点可点击跳转
+  new Swiper('#wzh_good', {
     loop: true,
     autoplay: { delay: 3200, disableOnInteraction: false },
-    pagination: { el: '#wzh_ppag', clickable: true },
+    pagination: { el: '#wzh_pag_good', clickable: true },
     effect: 'cube'
   });
 </script>
