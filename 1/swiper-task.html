@@ -293,17 +293,28 @@
 </div>
 
 <script>
-  // ══════════════════════════════════════════════════════════
-  //  ✍️ 学生作答区：把 4 个轮播全部救活（参考各演示台上方的绿色任务卡）
-  // ══════════════════════════════════════════════════════════
+  // ╔══════════════════════════════════════════════════════════════╗
+  // ║  ✍️ 学生作答区（全部已完成）                                    ║
+  // ║                                                                ║
+  // ║  课堂任务：                                                    ║
+  // ║    任务 1  最小可拖动（#wzh_sw1）  三行代码即可                 ║
+  // ║    任务 2  循环 + 600ms + 圆点 + 箭头（#wzh_sw2）              ║
+  // ║    任务 3  2.6 秒自动 + 拖动后不停（#wzh_sw3）                 ║
+  // ║    任务 4  3.2 秒自动 + 六种 effect 按钮切换（#wzh_sw4）      ║
+  // ║                                                                ║
+  // ║  扩展任务（课堂未讲，自主查阅文档完成）：                        ║
+  // ║    任务 5  creative 仿写 — prev 缩小左移 / next 右侧入场（#wzh_sw5）║
+  // ║    任务 6  keyboard 超纲 — 方向键在任意焦点下翻页（#wzh_sw6）  ║
+  // ╚══════════════════════════════════════════════════════════════╝
 
-  // ── 任务 1：初始化 #wzh_sw1，让它至少可以拖动 ──
-  // 三行代码即可：new Swiper(选择器, {}); 空配置对象就够了，默认已能拖动
+
+  // ══ 学生作答 · 任务 1：最小可拖动 ══
+  // 提示：空配置对象就够了，默认已能拖动
   new Swiper('#wzh_sw1', {});
 
 
-  // ── 任务 2：初始化 #wzh_sw2，循环 + 600ms + 圆点可点 + 箭头切换 ──
-  // loop:true 让首尾无缝；speed:600 是切换耗时；pagination/navigation 必须传 el 才能"通电"
+  // ══ 学生作答 · 任务 2：循环 + 600ms + 圆点 + 箭头 ══
+  // loop:true 让首尾无缝；speed 单位毫秒；pagination/navigation 必须传 el 才能通电
   new Swiper('#wzh_sw2', {
     loop: true,
     speed: 600,
@@ -312,8 +323,8 @@
   });
 
 
-  // ── 任务 3：初始化 #wzh_sw3，循环 + 2.6 秒自动翻页 + 拖动后不停 + 圆点 ──
-  // disableOnInteraction:false 是关键——用户拖一下后自动播放还会继续；delay 单位毫秒
+  // ══ 学生作答 · 任务 3：循环 + 2.6 秒自动翻页 + 拖动后不停 ══
+  // ★ disableOnInteraction:false 是关键——默认用户拖一下自动播放就停，必须显式关掉
   new Swiper('#wzh_sw3', {
     loop: true,
     speed: 600,
@@ -322,8 +333,8 @@
   });
 
 
-  // ── 任务 4：初始化 #wzh_sw4，循环 + 3.2 秒自动播放 + 圆点 + 初始 effect ──
-  // 把 wzh_sw4 保存在变量里，进阶的按钮切换需要用它先 destroy 再重建
+  // ══ 学生作答 · 任务 4：循环 + 3.2 秒自动 + 圆点 + 初始 effect ══
+  // 把 wzh_sw4 保存在变量里，进阶的按钮切换要用它先 destroy 再重建
   var wzh_sw4 = new Swiper('#wzh_sw4', {
     loop: true,
     speed: 800,
@@ -333,10 +344,32 @@
   });
 
 
-  // ── 任务 5：初始化 #wzh_sw5，creative effect，prev 离场缩小左移带阴影、next 入场放大右移 ──
-  // creative 不是预设 effect，需要 creativeEffect: { prev, next } 分别写 transform
-  // prev 控制"离场"那张的形态（缩小左移 + z 轴后退），next 控制"入场"那张的形态（从右进场）
-  // translate 的三个数字是 [x 方向%, y 方向 px, z 方向（透视）]
+  // ══ 学生作答 · 任务 4 进阶：按钮点击切换六种 effect ══
+  // 提示 1：动态换 effect 只改参数无效，必须先 destroy(true,true) 再 new
+  // 提示 2：按钮上已有 data-fx 属性，用 wzh_btn.dataset.fx 读取效果名
+  document.querySelectorAll('.wzh_fx button').forEach(function(wzh_btn){
+    wzh_btn.addEventListener('click', function(){
+      // 1) 高亮当前按钮、其余去掉
+      document.querySelectorAll('.wzh_fx button').forEach(function(wzh_b){ wzh_b.classList.remove('wzh_on'); });
+      wzh_btn.classList.add('wzh_on');
+      // 2) 销毁旧实例（动态换 effect 必须 destroy 再重建）
+      wzh_sw4.destroy(true, true);
+      // 3) 用新 effect 重建实例（其它配置原样保留，effect 从按钮 data-fx 读取）
+      wzh_sw4 = new Swiper('#wzh_sw4', {
+        loop: true,
+        speed: 800,
+        effect: wzh_btn.dataset.fx,
+        autoplay: { delay: 3200, disableOnInteraction: false },
+        pagination: { el: '#wzh_pag4', clickable: true }
+      });
+    });
+  });
+
+
+  // ══ 学生作答 · 任务 5（扩展）：creative effect 仿写 ══
+  // ★ creative 不是预设 effect，需要 creativeEffect:{prev,next} 分别写 transform
+  // prev 控制"离场"那张：缩小左移 20% + z 轴后退 + 阴影 + -12° 倾角
+  // next 控制"入场"那张：从右侧 100% 进场
   new Swiper('#wzh_sw5', {
     loop: true,
     speed: 800,
@@ -355,39 +388,13 @@
   });
 
 
-  // ── 任务 6：初始化 #wzh_sw6，加 keyboard 模块让 ← → 键也能翻页 ──
-  // keyboard.enabled:true 启用键盘导航；onlyInViewport:false 让键盘在任何焦点都生效
+  // ══ 学生作答 · 任务 6（扩展）：keyboard 键盘导航 ══
+  // ★ keyboard.enabled:true 启用方向键；onlyInViewport:false 让键盘在任何焦点都生效（超纲）
   new Swiper('#wzh_sw6', {
     loop: true,
     speed: 600,
     keyboard: { enabled: true, onlyInViewport: false },
     pagination: { el: '#wzh_pag6', clickable: true }
-  });
-
-
-  // ── 任务 4 进阶：补全按钮点击事件，实现六种效果实时切换 ──
-  // 提示 1：动态换 effect 只改参数是无效的，必须销毁旧实例再重建（destroy + new）
-  // 提示 2：按钮上已有 data-fx 属性，用 wzh_btn.dataset.fx 读取要切换的效果名
-  document.querySelectorAll('.wzh_fx button').forEach(function(wzh_btn){
-    wzh_btn.addEventListener('click', function(){
-
-      // 步骤 1：先给当前按钮加 wzh_on 类、其余按钮去掉 wzh_on（高亮当前按钮）
-      document.querySelectorAll('.wzh_fx button').forEach(function(wzh_b){ wzh_b.classList.remove('wzh_on'); });
-      wzh_btn.classList.add('wzh_on');
-
-      // 步骤 2：销毁旧的 wzh_sw4 实例（动态换 effect 不能只改参数，必须销毁再重建）
-      wzh_sw4.destroy(true, true);
-
-      // 步骤 3：用新 effect 重建实例（把其它配置原样保留，effect 从按钮 data-fx 读取）
-      wzh_sw4 = new Swiper('#wzh_sw4', {
-        loop: true,
-        speed: 800,
-        effect: wzh_btn.dataset.fx,
-        autoplay: { delay: 3200, disableOnInteraction: false },
-        pagination: { el: '#wzh_pag4', clickable: true }
-      });
-
-    });
   });
 </script>
 </body>
