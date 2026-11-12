@@ -58,6 +58,12 @@
   .wzh_swiper .swiper-pagination-bullet{background:#0f2b5b;opacity:.35}
   .wzh_swiper .swiper-pagination-bullet-active{background:#e8890c;opacity:1;width:22px;border-radius:6px}
 
+  /* 播放/暂停按钮 + 滚动条（任务三新增功能） */
+  .wzh_playbtn{display:block;margin:12px auto 0;padding:8px 22px;border:1px solid #0f2b5b;background:#fff;color:#0f2b5b;border-radius:999px;font-size:13px;font-weight:bold;cursor:pointer;transition:.2s}
+  .wzh_playbtn:hover{background:#0f2b5b;color:#fff}
+  .swiper-scrollbar{height:8px;background:#dbe4ff;border-radius:999px;margin-top:12px;cursor:pointer}
+  .swiper-scrollbar-drag{background:linear-gradient(#1d5bbf,#0f2b5b);border-radius:999px}
+
   /* 提示词块（与实验一同款） */
   .wzh_tag{display:inline-block;font-size:12.5px;border-radius:999px;padding:3px 12px;margin-bottom:8px;background:#e8f0ff;color:#0f2b5b;border:1px solid #c7d8f8}
   .wzh_prompt{background:#203d43;color:#eef4f3;border-left:5px solid #d66a45;border-radius:10px;padding:16px 20px;font-size:13.5px;line-height:2;white-space:pre-wrap;margin:6px 0 14px}
@@ -140,28 +146,36 @@
       <span class="wzh_no">三</span>
       <h2>综合创作 + keyboard 键盘导航<small>六件展品 · 方向键 ← → 翻页</small></h2>
     </div>
-    <p class="wzh_txt"><b>① 展品扩充</b>：第六件展品"<b>爱达魔都号</b>——2024 年 1 月首航，国产大型邮轮，中国造船史上的里程碑"。<b>② 超纲能力</b>：启用 <code>keyboard</code> 模块，<code>onlyInViewport:false</code> 让方向键在任意焦点下生效。</p>
+    <p class="wzh_txt"><b>① 展品扩充</b>：第六件展品"<b>爱达魔都号</b>——2024 年 1 月首航，国产大型邮轮，中国造船史上的里程碑"。<b>② 超纲能力</b>：启用 <code>keyboard</code> 模块，<code>onlyInViewport:false</code> 让方向键在任意焦点下生效。<b>③ 新增功能</b>：3.2 秒自动轮播（手动后不停）、播放/暂停按钮、可拖动滚动条。</p>
     <div class="wzh_req">
       <h3>✍️ 扩展任务三 要求</h3>
-      <p>初始化 <code>#wzh_esw2</code>：六张 slide（含爱达魔都号），保留 <code>#wzh_epag2</code> 圆点分页器，加 <code>keyboard: { enabled: true, onlyInViewport: false }</code>。</p>
-      <span class="wzh_star">⭐ 验证标准：方向键 ← → 能翻页；最后一张爱达魔都号能看到"2024 年 1 月首航"</span>
+      <p>初始化 <code>#wzh_esw2</code>：六张 slide（含爱达魔都号），保留 <code>#wzh_epag2</code> 圆点分页器，加 <code>keyboard</code>、3.2 秒 <code>autoplay</code>、可拖动 <code>scrollbar</code>、播放/暂停按钮。</p>
+      <span class="wzh_star">⭐ 验证标准：方向键 ← → 能翻页；点"暂停"后自动播放停止；拖底部滚动条能跳页</span>
     </div>
     <span class="wzh_tag">给 AI 的提示词</span>
-    <div class="wzh_prompt">把轮播扩充到六张 slide，第六张是"爱达魔都号——2024 年 1 月首航，国产大型邮轮"；保留可点击圆点分页器 #wzh_epag2，并启用 keyboard 键盘导航，要求方向键在页面任意焦点下都能翻页（不只焦点在轮播上时）。</div>
-    <div class="wzh_code">new Swiper('#wzh_esw2', {
+    <div class="wzh_prompt">把轮播扩充到六张 slide，第六张是"爱达魔都号——2024 年 1 月首航，国产大型邮轮"；保留可点击圆点分页器 #wzh_epag2；启用 keyboard 键盘导航（方向键在任意焦点下翻页）；开启 3.2 秒自动播放且用户操作后不停止；在底部加可拖动滚动条 #wzh_esbar2；再放一个播放/暂停按钮 #wzh_play2，点击时调用 swiper.autoplay.start()/stop() 并切换按钮文字。</div>
+    <div class="wzh_code">var wzh_esw2 = new Swiper('#wzh_esw2', {
   loop: true,
   speed: 600,
+  autoplay: { delay: 3200, disableOnInteraction: false },
   keyboard: { enabled: true, onlyInViewport: false },
-  pagination: { el: '#wzh_epag2', clickable: true }
+  pagination: { el: '#wzh_epag2', clickable: true },
+  scrollbar: { el: '#wzh_esbar2', draggable: true }
+});
+document.getElementById('wzh_play2').addEventListener('click', function(){
+  if (wzh_esw2.autoplay.running) { wzh_esw2.autoplay.stop(); this.textContent = '▶ 播放'; }
+  else { wzh_esw2.autoplay.start(); this.textContent = '⏸ 暂停'; }
 });</div>
     <table class="wzh_table">
       <tr><th>想要的效果（中文）</th><th>对应参数</th><th>为什么是它</th></tr>
       <tr><td>方向键 ← → 翻页</td><td><code>keyboard: { enabled: true }</code></td><td>keyboard 是独立模块，不写的话按键毫无反应。</td></tr>
       <tr><td>焦点不在轮播上按键也生效</td><td><code>onlyInViewport: false</code></td><td>默认 true 时轮播滚出视口按键就失效，本页有两个轮播必须关掉。</td></tr>
-      <tr><td>第六件展品爱达魔都号</td><td>HTML 第六个 <code>swiper-slide</code></td><td>数据层扩充，与配置无关；图片由 AI 生成（aida_modu_1.jpg）。</td></tr>
+      <tr><td>3.2 秒自动轮播，手动后不停</td><td><code>autoplay: { delay: 3200, disableOnInteraction: false }</code></td><td>与任务一同一教训：默认交互后会停，必须显式关掉。</td></tr>
+      <tr><td>底部可拖动滚动条</td><td><code>scrollbar: { el: '…', draggable: true }</code></td><td>只加 DOM 还不够，要 draggable:true 才能用鼠标拖。</td></tr>
+      <tr><td>播放/暂停按钮</td><td>JS 监听 click → <code>autoplay.start()/stop()</code></td><td>按钮不是 Swiper 内置，得自己绑事件并切换文字。</td></tr>
     </table>
     <div class="wzh_demo">
-      <span class="wzh_demo_tag">🎛️ 演示 · 键盘 ← → 方向键翻页（请点进画面后按键）</span>
+      <span class="wzh_demo_tag">🎛️ 演示 · 方向键 ← → / 拖滚动条 / 点播放暂停</span>
       <div class="wzh_swiper">
         <div class="swiper" id="wzh_esw2">
           <div class="swiper-wrapper">
@@ -173,7 +187,9 @@
             <div class="swiper-slide"><img src="swiper-imgs/aida_modu_1.jpg" alt="爱达魔都号大型邮轮"><div class="wzh_cap"><h3>爱达魔都号</h3><p>2024 年 1 月首航 · 国产大型邮轮 · 中国造船史上的里程碑</p></div></div>
           </div>
           <div class="swiper-pagination" id="wzh_epag2"></div>
+          <div class="swiper-scrollbar" id="wzh_esbar2"></div>
         </div>
+        <button class="wzh_playbtn" id="wzh_play2" type="button">⏸ 暂停</button>
       </div>
     </div>
   </div>
@@ -202,13 +218,20 @@
     pagination: { el: '#wzh_epag1', clickable: true }
   });
 
-  // ── 功能：初始化扩展任务三的综合轮播（#wzh_esw2）──
-  // keyboard.enabled 启用方向键翻页；onlyInViewport:false 让键盘在任意焦点下都生效
-  new Swiper('#wzh_esw2', {
+  // ── 功能：初始化扩展任务三的综合轮播（#wzh_esw2），新增 autoplay + scrollbar + 播放暂停按钮 ──
+  var wzh_esw2 = new Swiper('#wzh_esw2', {
     loop: true,
     speed: 600,
+    autoplay: { delay: 3200, disableOnInteraction: false },
     keyboard: { enabled: true, onlyInViewport: false },
-    pagination: { el: '#wzh_epag2', clickable: true }
+    pagination: { el: '#wzh_epag2', clickable: true },
+    scrollbar: { el: '#wzh_esbar2', draggable: true }
+  });
+
+  // ── 功能：播放/暂停按钮逻辑（点击切换自动播放，并同步按钮文字）──
+  document.getElementById('wzh_play2').addEventListener('click', function(){
+    if (wzh_esw2.autoplay.running) { wzh_esw2.autoplay.stop(); this.textContent = '▶ 播放'; }
+    else { wzh_esw2.autoplay.start(); this.textContent = '⏸ 暂停'; }
   });
 </script>
 </body>
