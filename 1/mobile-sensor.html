@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--
+  作者：王子涵
+  建立时间：2026-11-16
+  使用模型：DeepSeek-V4.1-Flash
+  功能名称：移动端传感器 · 摇一摇抽今日菜谱
+  功能简介：监听 devicemotion 计算合成加速度，摇动超过阈值触发抽菜谱（含 1.5 秒冷却），
+            无传感器时降级为「点我抽一次」按钮，iOS 通过按钮申请权限。
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>摇一摇 · 抽今日菜谱 | 王子涵</title>
+<style>
+  /* ===== 基础样式 ===== */
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    min-height:100vh;
+    background:linear-gradient(160deg,#fff7ed 0%,#ffe9d6 45%,#f6f0ff 100%);
+    color:#1f2937;
+    display:flex;justify-content:center;
+    padding:28px 18px 44px;
+  }
+  .wy_wrap{width:100%;max-width:430px}
+
+  /* ===== 头部 ===== */
+  .wy_head{text-align:center;margin-bottom:22px}
+  .wy_head .wy_badge{
+    display:inline-block;padding:5px 14px;border-radius:999px;background:#fff;
+    border:1px solid #ffd6ae;color:#ea580c;font-size:12.5px;letter-spacing:1px;margin-bottom:12px;
+  }
+  .wy_head h1{font-size:24px;color:#111827;letter-spacing:.5px}
+  .wy_head h1 span{
+    background:linear-gradient(90deg,#ea580c,#db2777);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .wy_head p{margin-top:9px;font-size:13.5px;color:#78716c;line-height:1.7}
+
+  /* ===== 手机图示区 ===== */
+  .wy_phone{
+    background:#fff;border-radius:22px;padding:26px 20px 22px;
+    box-shadow:0 12px 32px rgba(234,88,12,.12);
+    border:1px solid #ffe4cc;text-align:center;position:relative;overflow:hidden;
+  }
+  .wy_shake_icon{
+    font-size:58px;line-height:1;display:inline-block;
+    animation:wy_wobble 1.6s ease-in-out infinite;
+  }
+  /* 摇动示意动画：左右摆动，提示用户可以摇手机 */
+  @keyframes wy_wobble{
+    0%,100%{transform:rotate(-7deg)}
+    50%{transform:rotate(7deg)}
+  }
+  .wy_phone.is_waiting .wy_shake_icon{animation-duration:.45s}
+  .wy_tip{margin-top:14px;font-size:15px;color:#57534e;font-weight:bold}
+  .wy_sub{margin-top:6px;font-size:12.5px;color:#a8a29e}
+
+  /* ===== 结果卡片 ===== */
+  .wy_result{
+    margin-top:20px;border-radius:18px;padding:22px 18px;
+    background:linear-gradient(135deg,#fff1e6,#ffe0ef);
+    border:1px dashed #f9a8d4;
+    opacity:.45;
+    transition:opacity .3s ease;
+  }
+  .wy_result.is_on{opacity:1}
+  /* 抽中时的弹出动画 */
+  .wy_result.is_pop{animation:wy_pop .5s cubic-bezier(.18,1.3,.4,1) both}
+  @keyframes wy_pop{
+    0%{transform:scale(.6) rotate(-4deg);opacity:0}
+    60%{transform:scale(1.06) rotate(1.5deg);opacity:1}
+    100%{transform:scale(1) rotate(0);opacity:1}
+  }
+  .wy_dish_emo{font-size:44px;line-height:1}
+  .wy_dish_name{margin-top:8px;font-size:22px;font-weight:bold;color:#be123c;letter-spacing:1px}
+  .wy_dish_desc{margin-top:7px;font-size:13px;color:#9f1239;opacity:.85;line-height:1.6}
+
+  /* ===== 按钮 ===== */
+  .wy_btns{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+  .wy_btn{
+    border:none;border-radius:12px;padding:13px 16px;font-size:15px;font-weight:bold;
+    font-family:inherit;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .wy_btn:active{transform:scale(.97)}
+  .wy_btn_main{
+    background:linear-gradient(135deg,#f97316,#e11d48);color:#fff;
+    box-shadow:0 8px 18px rgba(225,29,72,.28);
+  }
+  .wy_btn_ghost{
+    background:#fff;color:#c2410c;border:1px solid #fed7aa;
+  }
+  .wy_btn[hidden]{display:none}
+
+  /* ===== 状态提示 ===== */
+  .wy_state{
+    margin-top:14px;font-size:13px;line-height:1.7;padding:11px 14px;border-radius:11px;
+    display:none;
+  }
+  .wy_state.is_show{display:block}
+  .wy_state_warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+  .wy_state_info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+
+  /* ===== 说明区 ===== */
+  .wy_note{margin-top:24px;background:#fff;border-radius:16px;padding:18px;border:1px solid #f1f5f9}
+  .wy_note h2{font-size:15px;color:#334155;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .wy_note h2::before{content:"";width:4px;height:15px;border-radius:2px;background:#f97316}
+  .wy_note p{font-size:13px;color:#64748b;line-height:1.85;margin-bottom:9px}
+  .wy_note strong{color:#c2410c}
+  .wy_note code{
+    background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;
+    padding:1px 5px;font-size:12px;color:#be123c;font-family:Consolas,monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wy_wrap">
+
+  <header class="wy_head">
+    <span class="wy_badge">移动端 · 设备传感器</span>
+    <h1>摇一摇 · <span>抽今日菜谱</span></h1>
+    <p>基于 devicemotion 加速度检测<br>手机摇一摇，随机决定今天吃什么</p>
+  </header>
+
+  <!-- 摇动提示 + 结果区 -->
+  <section class="wy_phone is_waiting" id="wy_phone">
+    <div class="wy_shake_icon">📱</div>
+    <div class="wy_tip" id="wy_tip">摇一摇手机，抽今日菜谱</div>
+    <div class="wy_sub" id="wy_sub">请用手机打开本页，摇动屏幕即可抽菜</div>
+
+    <div class="wy_result" id="wy_result">
+      <div class="wy_dish_emo" id="wy_dish_emo">🍽️</div>
+      <div class="wy_dish_name" id="wy_dish_name">等待抽取</div>
+      <div class="wy_dish_desc" id="wy_dish_desc">摇一摇，让命运替你决定</div>
+    </div>
+
+    <!-- 状态提示条 -->
+    <div class="wy_state wy_state_warn" id="wy_state"></div>
+
+    <div class="wy_btns">
+      <!-- iOS 13+ 需要用户手势才允许申请传感器权限 -->
+      <button class="wy_btn wy_btn_main" id="wy_perm_btn" hidden>授权使用传感器</button>
+      <!-- 降级按钮：无传感器时也能抽 -->
+      <button class="wy_btn wy_btn_ghost" id="wy_pick_btn">点我抽一次</button>
+    </div>
+  </section>
+
+  <!-- 原理说明 -->
+  <section class="wy_note">
+    <h2>为什么必须做降级</h2>
+    <p><strong>1. 桌面浏览器基本收不到传感器数据。</strong>电脑没有加速度计，<code>devicemotion</code> 要么不触发，要么 <code>accelerationIncludingGravity</code> 为 <code>null</code>。不降级就是一片空白，用户以为页面坏了。</p>
+    <p><strong>2. 系统权限与机型差异大。</strong>iOS 13+ 必须在用户点击后调用 <code>DeviceMotionEvent.requestPermission()</code>，用户点"拒绝"后不会再有数据；部分安卓机型或浏览器也直接屏蔽该事件。</p>
+    <p><strong>3. 降级不等于放弃功能。</strong>保留「点我抽一次」按钮，任何设备都能完成"抽菜谱"这个核心目标，传感器只是更酷的触发方式。</p>
+    <p><strong>4. 数据结构差异。</strong><code>acceleration</code> 是扣除重力后的净加速度（静止时接近 0，长时间会漂移）；<code>accelerationIncludingGravity</code> 含重力（静止时约 9.8），更适合做"摇一摇"这类剧烈动作判断。</p>
+    <p>作者：王子涵 · 学号 0807</p>
+  </section>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   摇一摇抽菜谱 · 逻辑层
+   变量统一 wy_ 前缀（王子涵命名规范）
+   ══════════════════════════════════════════════════════════ */
+
+// 菜单数据：抽中后随机取一项
+var wy_dishes = [
+  { emo: '🍜', name: '兰州牛肉面', desc: '一清二白三红四绿五黄，汤头最见功夫' },
+  { emo: '🍚', name: '黄焖鸡米饭', desc: '砂锅咕嘟冒泡，土豆吸满汤汁' },
+  { emo: '🥘', name: '麻辣香锅', desc: '自选食材一锅炒，辣度自己定' },
+  { emo: '🍲', name: '番茄牛腩煲', desc: '酸甜开胃，配一碗白饭刚好' },
+  { emo: '🍕', name: '榴莲披萨', desc: '重口味选手的快乐，拉丝要够长' },
+  { emo: '🥟', name: '手工水饺', desc: '皮薄馅大，蘸醋加蒜更香' },
+  { emo: '🍛', name: '咖喱鸡饭', desc: '浓稠咖喱裹住鸡块，微辣回甜' },
+  { emo: '🍣', name: '三文鱼刺身', desc: '冰镇厚切，芥末点到即止' },
+  { emo: '🌯', name: '煎饼果子', desc: '加蛋加薄脆，双酱一刷' },
+  { emo: '🍤', name: '蒜蓉小龙虾', desc: '一盆端上来，剥到手停不下来' }
+];
+
+var wy_cooldownMs = 1500;     // 冷却时间：一次摇动只触发一次
+var wy_threshold = 18;        // 合成加速度阈值，越小越灵敏
+var wy_lastShakeAt = 0;       // 上次触发时间戳
+var wy_hasData = false;       // 是否真的收到过有效传感器数据
+var wy_watchTimer = null;     // 无数据检测定时器
+
+var wy_phone    = document.getElementById('wy_phone');
+var wy_tip      = document.getElementById('wy_tip');
+var wy_sub      = document.getElementById('wy_sub');
+var wy_result   = document.getElementById('wy_result');
+var wy_dishEmo  = document.getElementById('wy_dish_emo');
+var wy_dishName = document.getElementById('wy_dish_name');
+var wy_dishDesc = document.getElementById('wy_dish_desc');
+var wy_state    = document.getElementById('wy_state');
+var wy_permBtn  = document.getElementById('wy_perm_btn');
+var wy_pickBtn  = document.getElementById('wy_pick_btn');
+
+/**
+ * 功能名称：wy_showState
+ * 功能简介：显示状态提示条。type 传 'warn' 显示橙色警告，传 'info' 显示蓝色信息；不传则隐藏。
+ *           副作用：直接改写 #wy_state 的类名与文本。
+ */
+function wy_showState(wy_text, wy_type) {
+  if (!wy_text) { wy_state.className = 'wy_state'; wy_state.textContent = ''; return; }
+  wy_state.className = 'wy_state is_show ' + (wy_type === 'info' ? 'wy_state_info' : 'wy_state_warn');
+  wy_state.textContent = wy_text;
+}
+
+/**
+ * 功能名称：wy_rollDish
+ * 功能简介：从菜单中随机抽一道菜并渲染到结果卡。
+ *           做法是先用随机下标取数据，再重置动画类触发一次弹出效果；
+ *           返回值为抽中的菜名（字符串），便于调用方做日志或提示。
+ */
+function wy_rollDish() {
+  var wy_index = Math.floor(Math.random() * wy_dishes.length);
+  var wy_dish = wy_dishes[wy_index];
+
+  wy_dishEmo.textContent  = wy_dish.emo;
+  wy_dishName.textContent = wy_dish.name;
+  wy_dishDesc.textContent = wy_dish.desc;
+
+  wy_result.classList.add('is_on');
+  // 先移除再加回，强制浏览器重排以重播 CSS 动画
+  wy_result.classList.remove('is_pop');
+  void wy_result.offsetWidth;
+  wy_result.classList.add('is_pop');
+
+  return wy_dish.name;
+}
+
+/**
+ * 功能名称：wy_triggerShake
+ * 功能简介：摇动命中后的统一入口（真摇动与降级按钮共用）。
+ *           内部做 1.5 秒冷却判断：距上次触发不足冷却时间就直接返回 false，
+ *           避免一次连续摇动重复抽菜；命中则刷新时间戳、抽菜并返回 true。
+ */
+function wy_triggerShake() {
+  var wy_now = Date.now();
+  if (wy_now - wy_lastShakeAt < wy_cooldownMs) return false;
+  wy_lastShakeAt = wy_now;
+
+  wy_rollDish();
+
+  wy_phone.classList.remove('is_waiting');
+  wy_tip.textContent = '已抽到！再摇一次换一道';
+  wy_sub.textContent = '冷却 ' + (wy_cooldownMs / 1000) + ' 秒后可再次摇动';
+  return true;
+}
+
+/**
+ * 功能名称：wy_handleMotion
+ * 功能简介：devicemotion 事件回调。取 accelerationIncludingGravity 的三轴值计算
+ *           合成加速度（勾股定理），超过阈值即视为摇动并调用 wy_triggerShake。
+ *           副作用：标记 wy_hasData，清掉"无传感器"提示。
+ */
+function wy_handleMotion(wy_event) {
+  var wy_acc = wy_event.accelerationIncludingGravity;
+  // 有些设备/浏览器会给出 null，直接忽略，交给超时检测去降级
+  if (!wy_acc || wy_acc.x === null || wy_acc.y === null || wy_acc.z === null) return;
+
+  if (!wy_hasData) {
+    wy_hasData = true;
+    wy_showState('');
+    wy_sub.textContent = '传感器已就绪，摇动手机试试';
+    // 已拿到数据，取消"无数据"兜底定时器
+    if (wy_watchTimer) { clearTimeout(wy_watchTimer); wy_watchTimer = null; }
+  }
+
+  // 合成加速度 = √(x² + y² + z²)
+  var wy_g = Math.sqrt(
+    wy_acc.x * wy_acc.x +
+    wy_acc.y * wy_acc.y +
+    wy_acc.z * wy_acc.z
+  );
+
+  if (wy_g > wy_threshold) wy_triggerShake();
+}
+
+/**
+ * 功能名称：wy_startListen
+ * 功能简介：挂上 devicemotion 监听，并启动 1.2 秒的"无数据"兜底检测。
+ *           若 1.2 秒内没收到任何有效数据，判定设备不支持并提示降级。
+ */
+function wy_startListen() {
+  window.addEventListener('devicemotion', wy_handleMotion, false);
+
+  wy_watchTimer = setTimeout(function () {
+    if (!wy_hasData) {
+      wy_showState('当前设备不支持，请用手机打开。可点击下方「点我抽一次」按钮。');
+      wy_phone.classList.remove('is_waiting');
+      wy_tip.textContent = '当前设备不支持摇一摇';
+      wy_sub.textContent = '已自动切换到按钮模式';
+      wy_permBtn.hidden = true;
+    }
+  }, 1200);
+}
+
+/**
+ * 功能名称：wy_boot
+ * 功能简介：能力探测与初始化。分三种情况：
+ *           ① 完全没有 DeviceMotionEvent —— 直接降级提示；
+ *           ② iOS 13+ 需要 requestPermission —— 显示授权按钮，点击后申请；
+ *           ③ 其它（安卓等）—— 直接开始监听。
+ */
+function wy_boot() {
+  // 按钮始终可用，作为最终兜底
+  wy_pickBtn.addEventListener('click', function () {
+    wy_triggerShake();
+  });
+
+  // ① 浏览器根本不支持设备运动事件
+  if (!window.DeviceMotionEvent) {
+    wy_showState('当前设备不支持，请用手机打开。可点击下方「点我抽一次」按钮。');
+    wy_phone.classList.remove('is_waiting');
+    wy_tip.textContent = '当前设备不支持摇一摇';
+    wy_sub.textContent = '已自动切换到按钮模式';
+    return;
+  }
+
+  // ② iOS 13+ 必须在用户手势中申请权限
+  if (typeof DeviceMotionEvent.requestPermission === 'function') {
+    wy_permBtn.hidden = false;
+    wy_showState('iPhone 需要先授权，点击上方按钮开启传感器。', 'info');
+    wy_tip.textContent = '先点击「授权使用传感器」';
+    wy_sub.textContent = 'iOS 13 以上系统要求手动授权';
+
+    wy_permBtn.addEventListener('click', function () {
+      DeviceMotionEvent.requestPermission().then(function (wy_res) {
+        if (wy_res === 'granted') {
+          wy_permBtn.hidden = true;
+          wy_showState('');
+          wy_startListen();
+        } else {
+          wy_showState('你拒绝了传感器权限。可点击「点我抽一次」按钮抽菜。');
+          wy_tip.textContent = '传感器未授权';
+          wy_sub.textContent = '已切换到按钮模式';
+          wy_permBtn.hidden = true;
+        }
+      }).catch(function () {
+        wy_showState('权限申请失败，可点击「点我抽一次」按钮抽菜。');
+        wy_permBtn.hidden = true;
+      });
+    });
+    return;
+  }
+
+  // ③ 安卓等支持设备直接监听
+  wy_startListen();
+}
+
+// 页面就绪后启动
+wy_boot();
+</script>
+</body>
+</html>
