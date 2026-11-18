@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--
+  作者：王子涵
+  建立时间：2026-11-16
+  使用模型：DeepSeek-V4.1-Flash
+  功能名称：移动端课堂实践 · 提交总览
+  功能简介：汇总移动端触摸交互实践的任务一至任务四入口、提交形式说明与视频占位状态，
+            便于老师按任务逐项查看效果与答辩材料。
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="王子涵的移动端触摸交互课堂实践提交目录">
+<title>移动端课堂实践 · 提交目录 | 王子涵</title>
+<style>
+  /* ===== 基础 ===== */
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    background:
+      radial-gradient(900px 420px at 12% -8%, rgba(232,99,47,.14), transparent 60%),
+      radial-gradient(760px 380px at 92% 0%, rgba(124,58,237,.12), transparent 62%),
+      #f7f6f3;
+    color:#1f2937;line-height:1.7;
+    min-height:100vh;padding:30px 16px 56px;
+  }
+  .wzh_page{width:100%;max-width:760px;margin:0 auto}
+
+  /* ===== 页头 ===== */
+  .wzh_kicker{
+    display:inline-block;font-size:12px;font-weight:bold;letter-spacing:.18em;
+    color:#c2410c;background:#fff1e6;border:1px solid #ffd7bd;
+    padding:4px 10px;border-radius:999px;
+  }
+  .wzh_head h1{margin:14px 0 8px;font-size:30px;letter-spacing:-.5px;line-height:1.25}
+  .wzh_head .wzh_sub{font-size:14.5px;color:#57606f;max-width:600px}
+  .wzh_meta{margin-top:12px;font-size:13px;color:#8a94a6}
+
+  /* ===== 通用卡片 ===== */
+  .wzh_card{
+    background:#fff;border:1px solid #ece9e2;border-radius:18px;
+    box-shadow:0 10px 30px rgba(30,41,59,.07);
+    padding:20px;margin-top:18px;
+  }
+  .wzh_card h2{font-size:17px;margin-bottom:12px;letter-spacing:.2px}
+  .wzh_rules{list-style:none;display:grid;gap:11px}
+  .wzh_rules li{
+    position:relative;padding-left:26px;font-size:13.8px;color:#3f4756;
+  }
+  .wzh_rules li::before{
+    content:"";position:absolute;left:8px;top:9px;
+    width:7px;height:7px;border-radius:50%;
+    background:linear-gradient(135deg,#f97316,#e11d48);
+  }
+  .wzh_rules b{color:#111827}
+  .wzh_rules code{
+    font-family:Consolas,monospace;font-size:12.5px;color:#b91c1c;
+    background:#fff5f5;padding:1px 5px;border-radius:5px;
+  }
+
+  /* ===== 任务列表 ===== */
+  .wzh_list{display:grid;gap:12px;margin-top:18px}
+  .wzh_task{
+    display:flex;gap:14px;align-items:flex-start;
+    background:#fff;border:1px solid #ece9e2;border-radius:16px;
+    padding:16px 18px;text-decoration:none;color:inherit;
+    box-shadow:0 6px 18px rgba(30,41,59,.05);
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+  }
+  .wzh_task:hover,.wzh_task:focus-visible{
+    transform:translateY(-2px);border-color:#fdba74;
+    box-shadow:0 12px 26px rgba(234,88,12,.13);
+  }
+  .wzh_task_no{
+    flex:0 0 42px;height:42px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:bold;font-size:15px;color:#fff;
+    background:linear-gradient(135deg,#f97316,#e11d48);
+  }
+  .wzh_task_main{flex:1 1 auto;min-width:0}
+  .wzh_task_main h3{font-size:15.5px;margin-bottom:3px}
+  .wzh_task_main p{font-size:13px;color:#6b7280}
+  .wzh_task_tag{
+    display:inline-block;margin-top:7px;margin-right:6px;
+    font-size:11.5px;color:#7c3aed;background:#f5f3ff;
+    border:1px solid #e9e3ff;border-radius:999px;padding:1px 8px;
+  }
+  .wzh_task_tag.wzh_ok{color:#047857;background:#ecfdf5;border-color:#d1fae5}
+  .wzh_task_go{align-self:center;font-size:13px;font-weight:bold;color:#c2410c;white-space:nowrap}
+
+  /* ===== 视频状态 ===== */
+  .wzh_video_state{
+    display:flex;gap:12px;align-items:flex-start;
+    background:#fffaf4;border:1px dashed #f3c99b;border-radius:16px;
+    padding:16px 18px;margin-top:18px;font-size:13.4px;color:#7c4a17;
+  }
+  .wzh_video_state strong{color:#b45309}
+  .wzh_video_state .wzh_dot{
+    flex:0 0 10px;height:10px;margin-top:7px;border-radius:50%;background:#f59e0b;
+    box-shadow:0 0 0 4px rgba(245,158,11,.18);
+  }
+  .wzh_video_state code{
+    font-family:Consolas,monospace;font-size:12.5px;background:#fff3e0;
+    padding:1px 5px;border-radius:5px;
+  }
+
+  /* ===== 页脚 ===== */
+  .wzh_foot{
+    margin-top:26px;display:flex;flex-wrap:wrap;gap:10px 18px;
+    justify-content:space-between;font-size:12.5px;color:#9ca3af;
+  }
+  .wzh_foot a{color:#c2410c;font-weight:bold;text-decoration:none}
+  .wzh_foot a:hover{text-decoration:underline}
+
+  @media (max-width:420px){
+    .wzh_head h1{font-size:24px}
+    .wzh_task_go{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wzh_page">
+
+  <header class="wzh_head">
+    <span class="wzh_kicker">移动端 · 触摸交互</span>
+    <h1>移动端课堂实践</h1>
+    <p class="wzh_sub">四个递进任务：先观察记录，再实现手势，然后做综合交互，最后处理设备能力与排错。</p>
+    <p class="wzh_meta">王子涵 · 学号 24001010807 · 高级网页设计 2026—2027 学年第一学期</p>
+  </header>
+
+  <!-- 提交形式：按课堂要求区分有无操作视频 -->
+  <section class="wzh_card">
+    <h2>提交形式</h2>
+    <ul class="wzh_rules">
+      <li><b>任务一 · 事件侦探</b>：不提交手机操作视频。<b>提交 5 种操作的实测记录表与三个思考问题的答案</b>。</li>
+      <li><b>任务二 · 手势卡片</b>：不提交手机操作视频。<b>写出效果</b>，发布后打开即可看到左右滑动切换。</li>
+      <li><b>任务三 · 图片查看器</b>：<b>写出效果并插入手机实体演示视频</b>（用另一台设备拍摄屏幕），视频已接入页内播放器。</li>
+      <li><b>任务四 · 摇一摇彩蛋</b>：<b>写出效果并插入手机实体演示视频</b>（用另一台设备拍摄屏幕），视频已接入页内播放器。</li>
+      <li>四个任务均已发布到 Netlify，GitHub 仓库同步；桌面打开时请按 <code>F12 → 设备模式</code> 查看。</li>
+    </ul>
+  </section>
+
+  <!-- 任务入口 -->
+  <section class="wzh_list" aria-label="四个任务入口">
+
+    <a class="wzh_task" href="./task1-events.html">
+      <span class="wzh_task_no">01</span>
+      <div class="wzh_task_main">
+        <h3>事件侦探：一次拖动到底发生了什么</h3>
+        <p>在演示页上依次做单击、向上拖动、向左快滑、双指触摸、长按后抬起，记录事件顺序并回答三个问题。</p>
+        <span class="wzh_task_tag">⭐ 观察记录</span><span class="wzh_task_tag wzh_ok">无操作视频</span>
+      </div>
+      <span class="wzh_task_go">查看记录 →</span>
+    </a>
+
+    <a class="wzh_task" href="./mobile-gesture.html">
+      <span class="wzh_task_no">02</span>
+      <div class="wzh_task_main">
+        <h3>手势卡片：左右滑动切换中华美食</h3>
+        <p>4 道菜的卡片，左滑下一张、右滑上一张，40px 阈值、300ms 冷却、0.3s 过渡、边界提示。</p>
+        <span class="wzh_task_tag">⭐⭐ 手势识别</span><span class="wzh_task_tag wzh_ok">无操作视频</span>
+      </div>
+      <span class="wzh_task_go">查看效果 →</span>
+    </a>
+
+    <a class="wzh_task" href="./mobile-zoom.html">
+      <span class="wzh_task_no">03</span>
+      <div class="wzh_task_main">
+        <h3>图片查看器：双指缩放 + 双击放大 + 拖动</h3>
+        <p>双指 1～4 倍缩放、双击在 1x / 2x 间切换、放大后单指拖动，缩回 1x 自动居中。</p>
+        <span class="wzh_task_tag">⭐⭐⭐ 多指手势</span><span class="wzh_task_tag">含实体演示视频</span>
+      </div>
+      <span class="wzh_task_go">查看效果 →</span>
+    </a>
+
+    <a class="wzh_task" href="./mobile-sensor.html">
+      <span class="wzh_task_no">04</span>
+      <div class="wzh_task_main">
+        <h3>摇一摇彩蛋：摇出今日菜谱</h3>
+        <p>监听 devicemotion 计算合成加速度，阈值 18、1.5 秒冷却，无传感器时降级为按钮，iOS 走权限申请。</p>
+        <span class="wzh_task_tag">⭐⭐⭐⭐ 设备能力</span><span class="wzh_task_tag">含实体演示视频</span>
+      </div>
+      <span class="wzh_task_go">查看效果 →</span>
+    </a>
+
+  </section>
+
+  <div class="wzh_video_state">
+    <span class="wzh_dot" aria-hidden="true"></span>
+    <div>
+      <strong>视频状态：待上传。</strong>任务三、任务四的页面已留好播放器位置，
+      用另一台设备录好操作过程后，把文件命名为 <code>task3-zoom.mp4</code>、<code>task4-shake.mp4</code>
+      放进 <code>1/mobile/videos/</code>，刷新页面即自动出现，无需改代码。
+    </div>
+  </div>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 高级网页设计</span>
+    <span><a href="./task1-events.html">从任务一开始 →</a> ｜ <a href="../index.html">返回课堂目录</a></span>
+  </footer>
+
+</div>
+</body>
+</html>

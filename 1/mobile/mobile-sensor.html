@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--
+  作者：王子涵
+  建立时间：2026-11-16
+  使用模型：DeepSeek-V4.1-Flash
+  功能名称：任务四 · 摇一摇彩蛋（摇出今日菜谱）
+  功能简介：监听 devicemotion，用 accelerationIncludingGravity 计算合成加速度，
+            超过阈值 18 且不在 1.5 秒冷却与动画中时随机抽一道菜；
+            无传感器或权限被拒时降级为"点我抽一次"按钮，页面内含手机实体演示视频占位。
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="移动端课堂实践任务四：摇一摇抽今日菜谱，含降级方案与 iOS 权限处理">
+<title>任务四 · 摇一摇彩蛋 | 王子涵</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    background:
+      radial-gradient(900px 440px at 12% -8%, rgba(232,99,47,.16), transparent 62%),
+      radial-gradient(760px 380px at 92% 2%, rgba(124,58,237,.13), transparent 60%),
+      #f7f6f3;
+    color:#1f2937;line-height:1.7;
+    min-height:100vh;padding:26px 16px 52px;
+    display:flex;justify-content:center;
+  }
+  .wzh_page{width:100%;max-width:480px}
+
+  .wzh_crumb{font-size:12.5px;color:#8a94a6;margin-bottom:12px}
+  .wzh_crumb a{color:#c2410c;font-weight:bold;text-decoration:none}
+  .wzh_kicker{
+    display:inline-block;font-size:12px;font-weight:bold;letter-spacing:.16em;
+    color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;
+    padding:4px 10px;border-radius:999px;
+  }
+  h1{margin:12px 0 6px;font-size:25px;letter-spacing:-.3px;line-height:1.35}
+  .wzh_sub{font-size:13.5px;color:#57606f}
+  .wzh_meta{margin-top:8px;font-size:12px;color:#9aa3b2}
+
+  /* ===== 摇一摇舞台 ===== */
+  .wzh_stage{
+    margin-top:16px;position:relative;overflow:hidden;
+    border-radius:22px;padding:26px 22px 22px;
+    background:linear-gradient(155deg,#7f1d1d 0%,#b91c1c 46%,#ea580c 100%);
+    color:#fff;box-shadow:0 18px 42px rgba(127,29,29,.32);
+    text-align:center;
+    touch-action:manipulation;
+  }
+  .wzh_stage::before{
+    content:"";position:absolute;left:-60px;bottom:-70px;
+    width:200px;height:200px;border-radius:50%;
+    background:rgba(255,255,255,.09);
+  }
+  .wzh_stage::after{
+    content:"";position:absolute;right:-46px;top:-56px;
+    width:160px;height:160px;border-radius:50%;
+    background:rgba(255,255,255,.08);
+  }
+  .wzh_phone{font-size:34px;line-height:1;margin-bottom:8px;display:inline-block}
+  .wzh_stage.wzh_shaking .wzh_phone{animation:wzh_shake .5s ease-in-out}
+  @keyframes wzh_shake{
+    0%,100%{transform:rotate(0) translateX(0)}
+    20%{transform:rotate(-14deg) translateX(-6px)}
+    45%{transform:rotate(12deg) translateX(6px)}
+    70%{transform:rotate(-8deg) translateX(-3px)}
+  }
+  .wzh_stage_tip{font-size:13px;color:rgba(255,255,255,.82)}
+
+  /* 菜谱结果 */
+  .wzh_result{
+    margin-top:16px;background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.26);border-radius:16px;
+    padding:16px 14px;min-height:104px;
+    display:flex;flex-direction:column;justify-content:center;gap:6px;
+    backdrop-filter:blur(3px);
+  }
+  .wzh_result_label{font-size:11.5px;letter-spacing:.2em;color:rgba(255,255,255,.7)}
+  .wzh_dish{
+    font-size:25px;font-weight:bold;letter-spacing:1.5px;
+    text-shadow:0 2px 12px rgba(0,0,0,.2);
+  }
+  .wzh_dish_desc{font-size:12.8px;color:rgba(255,255,255,.86)}
+  .wzh_result.wzh_pop{animation:wzh_pop .42s cubic-bezier(.22,.61,.36,1)}
+  @keyframes wzh_pop{
+    0%{transform:scale(.9);opacity:.35}
+    60%{transform:scale(1.03)}
+    100%{transform:scale(1);opacity:1}
+  }
+
+  /* 降级按钮 */
+  .wzh_btn{
+    margin-top:16px;width:100%;border:none;cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:bold;color:#7f1d1d;
+    background:#fff;border-radius:13px;padding:14px 16px;
+    box-shadow:0 8px 20px rgba(0,0,0,.16);
+    transition:transform .15s ease,box-shadow .15s ease;
+    touch-action:manipulation;
+  }
+  .wzh_btn:active{transform:scale(.975);box-shadow:0 5px 14px rgba(0,0,0,.14)}
+  .wzh_btn[hidden]{display:none}
+
+  /* ===== 状态条 ===== */
+  .wzh_state{
+    margin-top:12px;display:flex;gap:10px;align-items:flex-start;
+    background:#fff;border:1px solid #efede7;border-radius:13px;
+    padding:11px 14px;font-size:12.6px;color:#6b7280;
+  }
+  .wzh_state .wzh_dot{
+    flex:0 0 9px;height:9px;margin-top:6px;border-radius:50%;background:#22c55e;
+    box-shadow:0 0 0 4px rgba(34,197,94,.16);
+  }
+  .wzh_state.wzh_warn .wzh_dot{background:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.18)}
+  .wzh_state.wzh_err .wzh_dot{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.16)}
+  .wzh_state b{color:#111827}
+
+  /* ===== 通用卡片 ===== */
+  .wzh_card{
+    margin-top:16px;background:#fff;border:1px solid #ece9e2;border-radius:16px;
+    padding:16px 18px;box-shadow:0 8px 22px rgba(30,41,59,.06);
+  }
+  .wzh_card h2{font-size:15.5px;margin-bottom:10px}
+  .wzh_card h2 .wzh_tag{
+    font-size:11.5px;font-weight:normal;color:#6d28d9;background:#f5f3ff;
+    border:1px solid #e9e3ff;border-radius:999px;padding:1px 8px;margin-left:8px;
+  }
+  .wzh_card p{font-size:13.4px;color:#4b5563}
+  .wzh_card p+p{margin-top:8px}
+  .wzh_card b{color:#111827}
+  .wzh_card code{
+    font-family:Consolas,monospace;font-size:12.3px;color:#b91c1c;
+    background:#fff1f2;padding:1px 5px;border-radius:5px;
+  }
+  .wzh_card ul{list-style:none;display:grid;gap:8px;font-size:13.2px;color:#4b5563}
+  .wzh_card li{position:relative;padding-left:18px}
+  .wzh_card li::before{
+    content:"";position:absolute;left:4px;top:8px;width:6px;height:6px;border-radius:50%;
+    background:linear-gradient(135deg,#f97316,#e11d48);
+  }
+
+  /* ===== 视频占位 ===== */
+  .wzh_video_box{
+    position:relative;border-radius:14px;overflow:hidden;
+    background:#0b1220;aspect-ratio:9/16;max-height:420px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .wzh_video_box video{width:100%;height:100%;object-fit:contain;background:#0b1220}
+  .wzh_video_ph{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:8px;
+    padding:24px;text-align:center;color:#cbd5e1;font-size:12.8px;line-height:1.8;
+  }
+  .wzh_video_ph strong{color:#fbbf24;font-size:13.5px}
+  .wzh_video_ph .wzh_play{
+    width:52px;height:52px;border-radius:50%;
+    border:1px dashed rgba(251,191,36,.66);
+    display:flex;align-items:center;justify-content:center;
+    color:#fbbf24;font-size:20px;margin-bottom:4px;
+  }
+  .wzh_video_ph code{
+    font-family:Consolas,monospace;font-size:12px;color:#fcd34d;
+    background:rgba(251,191,36,.12);padding:1px 6px;border-radius:5px;
+  }
+  .wzh_video_box.wzh_has_video .wzh_video_ph{display:none}
+
+  .wzh_foot{
+    margin-top:22px;display:flex;flex-wrap:wrap;gap:8px 16px;
+    justify-content:space-between;font-size:12.5px;color:#9ca3af;
+  }
+  .wzh_foot a{color:#c2410c;font-weight:bold;text-decoration:none}
+
+  @media (max-width:420px){ h1{font-size:22px} .wzh_dish{font-size:22px} }
+</style>
+</head>
+<body>
+<div class="wzh_page">
+
+  <p class="wzh_crumb"><a href="./index.html">← 移动端课堂实践</a></p>
+  <span class="wzh_kicker">任务四 · ⭐⭐⭐⭐ 设备能力</span>
+  <h1>摇一摇彩蛋：摇出今日菜谱</h1>
+  <p class="wzh_sub">用力摇一摇手机，随机抽一道菜；没有传感器或权限被拒时，用按钮也能抽。</p>
+  <p class="wzh_meta">王子涵 · 学号 24001010807 · 阈值 18 ｜ 冷却 1.5s ｜ 10 道菜随机</p>
+
+  <!-- 摇一摇舞台 -->
+  <div class="wzh_stage" id="wzhStage">
+    <span class="wzh_phone" aria-hidden="true">📱</span>
+    <p class="wzh_stage_tip" id="wzhStageTip">拿起手机摇一摇，看看今天吃什么</p>
+
+    <div class="wzh_result" id="wzhResult" role="status" aria-live="polite">
+      <span class="wzh_result_label">今日菜谱</span>
+      <span class="wzh_dish" id="wzhDish">等待摇一摇…</span>
+      <span class="wzh_dish_desc" id="wzhDishDesc">摇动幅度大一点更容易被识别</span>
+    </div>
+
+    <button class="wzh_btn" id="wzhBtn" type="button" hidden>点我抽一次</button>
+  </div>
+
+  <!-- 传感器状态 -->
+  <div class="wzh_state" id="wzhState">
+    <span class="wzh_dot" aria-hidden="true"></span>
+    <div id="wzhStateText">正在等待传感器数据…（桌面浏览器没有加速度计，会自动降级）</div>
+  </div>
+
+  <!-- 手机实体演示视频：先留播放器占位 -->
+  <section class="wzh_card">
+    <h2>手机实体演示视频<span class="wzh_tag">待上传</span></h2>
+    <div class="wzh_video_box" id="wzhVideoBox">
+      <video id="wzhVideo" controls playsinline preload="metadata" webkit-playsinline
+             src="./videos/task4-shake.mp4"></video>
+      <div class="wzh_video_ph">
+        <div class="wzh_play" aria-hidden="true">▶</div>
+        <strong>演示视频录制中</strong>
+        <span>用另一台设备拍摄手机摇一摇出菜谱的过程，<br>命名为 <code>task4-shake.mp4</code> 放入 <code>1/mobile/videos/</code>，刷新本页即可播放。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 实现与降级说明 -->
+  <section class="wzh_card">
+    <h2>实现要点</h2>
+    <ul>
+      <li><b>合成加速度：</b>用 <code>√(x²+y²+z²)</code> 把三轴合成一个值，避免只判断单轴时"换个方向摇不响"。</li>
+      <li><b>阈值与冷却：</b>合成加速度超过 <b>18</b> 才判定为摇动；抽完后 <b>1.5 秒</b>冷却，防止一次抖动连抽多道菜。</li>
+      <li><b>动画期间不响应：</b>结果卡片 <code>wzh_pop</code> 动画播放期间同样忽略新摇动。</li>
+      <li><b>iOS 权限：</b>iOS 13 以上必须在用户手势里调用 <code>DeviceMotionEvent.requestPermission()</code>，所以页面给一个按钮触发授权。</li>
+      <li><b>降级：</b>没有 <code>DeviceMotionEvent</code>、1.2 秒收不到数据、或权限被拒，都会显示「点我抽一次」按钮。</li>
+    </ul>
+  </section>
+
+  <section class="wzh_card">
+    <h2>为什么必须做降级</h2>
+    <p>桌面浏览器、部分安卓模拟器和开启了省电模式的手机拿不到 <code>accelerationIncludingGravity</code>，事件要么不触发，要么是一串 0。如果只写"摇一摇"，这些用户看到的永远是一张不动的卡片。</p>
+    <p>所以我把"能不能摇"和"怎么抽"拆开：<b>抽菜谱是一个函数</b>，传感器只是它的一个触发源，按钮是另一个触发源。这样传感器失效时功能仍然可用，答辩时也能说清"我先判断能力，再决定入口"。</p>
+  </section>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 高级网页设计</span>
+    <span><a href="./index.html">返回移动端总览</a> ｜ <a href="../index.html">返回课堂目录</a></span>
+  </footer>
+
+</div>
+
+<script>
+/* ===================================================================
+   功能名称：任务四摇一摇抽菜谱
+   功能简介：监听 devicemotion，用合成加速度判定摇动，超过阈值且不在冷却/动画中时
+             随机展示一道菜；同时处理 iOS 权限申请与多种失效场景的按钮降级。
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var wzh_stage = document.getElementById('wzhStage');
+  var wzh_stageTip = document.getElementById('wzhStageTip');
+  var wzh_result = document.getElementById('wzhResult');
+  var wzh_dishEl = document.getElementById('wzhDish');
+  var wzh_descEl = document.getElementById('wzhDishDesc');
+  var wzh_btn = document.getElementById('wzhBtn');
+  var wzh_state = document.getElementById('wzhState');
+  var wzh_stateText = document.getElementById('wzhStateText');
+
+  // 10 道候选菜谱
+  var wzh_DISHES = [
+    { name: '北京烤鸭', desc: '果木挂炉，片皮卷饼，皮酥肉嫩' },
+    { name: '兰州牛肉面', desc: '一清二白三红四绿五黄，手工拉面' },
+    { name: '广式虾饺', desc: '水晶澄皮，整只虾仁，早茶必点' },
+    { name: '麻婆豆腐', desc: '郫县豆瓣配花椒，麻辣烫香酥嫩鲜活' },
+    { name: '西安肉夹馍', desc: '白吉馍夹腊汁肉，肥而不腻' },
+    { name: '云南过桥米线', desc: '滚汤烫熟生片，汤鲜料足' },
+    { name: '扬州炒饭', desc: '粒粒分明，虾仁火腿配青豆' },
+    { name: '潮汕牛肉火锅', desc: '现切吊龙匙柄，八秒即涮' },
+    { name: '新疆大盘鸡', desc: '土豆软糯，皮带面吸满汤汁' },
+    { name: '武汉热干面', desc: '芝麻酱拌碱面，配萝卜丁与葱花' }
+  ];
+
+  var wzh_THRESHOLD = 18;      // 合成加速度阈值
+  var wzh_COOLDOWN = 1500;     // 冷却时间 1.5 秒
+  var wzh_animating = false;   // 结果动画进行中
+  var wzh_lastShake = 0;       // 上次抽奖时间戳
+  var wzh_lastIndex = -1;      // 上一次抽到的菜，避免连续重复
+  var wzh_hasData = false;     // 是否已经收到过有效传感器数据
+  var wzh_permissionAsked = false;
+
+  /**
+   * 功能名称：wzh_setState
+   * 功能简介：更新状态条文字与配色（ok / warn / err），用于告诉用户当前传感器状态。
+   */
+  function wzh_setState(wzh_text, wzh_tone) {
+    wzh_stateText.textContent = wzh_text;
+    wzh_state.className = 'wzh_state' + (wzh_tone ? ' wzh_' + wzh_tone : '');
+  }
+
+  /**
+   * 功能名称：wzh_enableFallback
+   * 功能简介：显示"点我抽一次"按钮，并把状态条切到提示色。
+   *           只要传感器不可用、无数据或权限被拒都会调用它。
+   */
+  function wzh_enableFallback(wzh_reason) {
+    wzh_btn.hidden = false;
+    wzh_btn.textContent = '点我抽一次';
+    wzh_stageTip.textContent = '当前设备无法摇一摇，点下面按钮抽一次';
+    wzh_setState(wzh_reason, 'warn');
+  }
+
+  /**
+   * 功能名称：wzh_draw
+   * 功能简介：真正抽菜谱的动作（与触发源解耦）。
+   *           冷却中或动画中直接返回；抽到后写入文案并播放一次 pop 动画。
+   */
+  function wzh_draw() {
+    if (wzh_animating) return;
+    var wzh_now = Date.now();
+    if (wzh_now - wzh_lastShake < wzh_COOLDOWN) return;
+    wzh_lastShake = wzh_now;
+
+    // 随机取一道，且不与上一次重复
+    var wzh_index = Math.floor(Math.random() * wzh_DISHES.length);
+    if (wzh_index === wzh_lastIndex) {
+      wzh_index = (wzh_index + 1) % wzh_DISHES.length;
+    }
+    wzh_lastIndex = wzh_index;
+
+    var wzh_dish = wzh_DISHES[wzh_index];
+    wzh_dishEl.textContent = wzh_dish.name;
+    wzh_descEl.textContent = wzh_dish.desc;
+
+    // 动画期间锁住新摇动，避免一次抖动抽多次
+    wzh_animating = true;
+    wzh_stage.classList.add('wzh_shaking');
+    wzh_result.classList.remove('wzh_pop');
+    void wzh_result.offsetWidth; // 触发重排，让动画可以重复播放
+    wzh_result.classList.add('wzh_pop');
+
+    setTimeout(function () {
+      wzh_animating = false;
+      wzh_stage.classList.remove('wzh_shaking');
+    }, 500);
+  }
+
+  /**
+   * 功能名称：wzh_handleMotion
+   * 功能简介：devicemotion 回调。用 accelerationIncludingGravity 三轴合成加速度判断摇动，
+   *           超过阈值调用 wzh_draw；全 0 数据视为传感器不可用。
+   */
+  function wzh_handleMotion(wzh_e) {
+    var wzh_acc = wzh_e.accelerationIncludingGravity;
+    if (!wzh_acc) return;
+
+    var wzh_x = wzh_acc.x || 0;
+    var wzh_y = wzh_acc.y || 0;
+    var wzh_z = wzh_acc.z || 0;
+
+    // 三轴都为 0：设备没有可用的加速度计
+    if (wzh_x === 0 && wzh_y === 0 && wzh_z === 0) return;
+
+    if (!wzh_hasData) {
+      wzh_hasData = true;
+      wzh_btn.hidden = true;
+      wzh_setState('传感器已就绪，摇动手机试试', '');
+    }
+
+    // 合成加速度：不管往哪个方向摇，都能得到一个正的力度值
+    var wzh_force = Math.sqrt(wzh_x * wzh_x + wzh_y * wzh_y + wzh_z * wzh_z);
+    if (wzh_force > wzh_THRESHOLD) wzh_draw();
+  }
+
+  /**
+   * 功能名称：wzh_startMotion
+   * 功能简介：注册 devicemotion 监听，并在 1.2 秒后检查是否收到数据，
+   *           没收到就降级为按钮。
+   */
+  function wzh_startMotion() {
+    window.addEventListener('devicemotion', wzh_handleMotion, false);
+
+    setTimeout(function () {
+      if (!wzh_hasData) {
+        wzh_enableFallback('1.2 秒内没有收到传感器数据，已切换为按钮模式');
+      }
+    }, 1200);
+  }
+
+  /**
+   * 功能名称：wzh_requestPermission
+   * 功能简介：iOS 13+ 需要在用户手势中申请加速度计权限。
+   *           授权成功启动监听，被拒或出错则直接降级。
+   */
+  function wzh_requestPermission() {
+    if (wzh_permissionAsked) return;
+    wzh_permissionAsked = true;
+
+    if (typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission().then(function (wzh_res) {
+        if (wzh_res === 'granted') {
+          wzh_btn.hidden = true;
+          wzh_setState('权限已授权，正在等待传感器数据…', '');
+          wzh_startMotion();
+        } else {
+          wzh_enableFallback('传感器权限被拒绝，已切换为按钮模式');
+        }
+      }).catch(function () {
+        wzh_enableFallback('权限申请失败，已切换为按钮模式');
+      });
+    } else {
+      wzh_startMotion();
+    }
+  }
+
+  // ===== 初始化：能直接监听就监听，iOS 用按钮触发授权 =====
+  if (!('DeviceMotionEvent' in window)) {
+    wzh_enableFallback('当前环境没有 DeviceMotionEvent，已切换为按钮模式');
+  } else if (typeof DeviceMotionEvent.requestPermission === 'function') {
+    // iOS 13+：先给按钮让用户点，点下去再申请权限
+    wzh_btn.hidden = false;
+    wzh_btn.textContent = '开启摇一摇（需要授权）';
+    wzh_setState('iOS 需要先授权动作与方向访问', 'warn');
+    wzh_btn.addEventListener('click', function () {
+      wzh_requestPermission();
+    });
+  } else {
+    wzh_startMotion();
+  }
+
+  // 用户拒绝授权后，按钮继续承担"抽一次"的职责
+  wzh_btn.addEventListener('click', function () {
+    if (wzh_btn.textContent.indexOf('开启') === -1) wzh_draw();
+  });
+
+  // ===== 视频占位：文件就位后自动隐藏占位层 =====
+  (function () {
+    var wzh_box = document.getElementById('wzhVideoBox');
+    var wzh_video = document.getElementById('wzhVideo');
+    if (!wzh_box || !wzh_video) return;
+
+    wzh_video.addEventListener('loadeddata', function () {
+      wzh_box.classList.add('wzh_has_video');
+    });
+    wzh_video.addEventListener('error', function () {
+      wzh_box.classList.remove('wzh_has_video');
+    });
+  })();
+})();
+</script>
+</body>
+</html>

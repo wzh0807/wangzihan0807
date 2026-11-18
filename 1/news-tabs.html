@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--
+  作者：王子涵
+  建立时间：2026-11-16
+  使用模型：DeepSeek-V4.1-Flash
+  功能名称：新闻选项卡（可复用 Tab 组件）
+  功能简介：四个选项卡切换国内/省内/国际/最热新闻，国内新闻为默认项；
+            JS 独立在 js/news-tabs.js 中外部引用，通过 data-tabs 自动初始化，可复用于任意容器。
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新闻选项卡 | 王子涵</title>
+<style>
+  /* ===== 基础 ===== */
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    background:#f4f6fa;color:#1f2937;
+    min-height:100vh;padding:36px 16px 60px;
+    display:flex;justify-content:center;
+  }
+  .wzh_page{width:100%;max-width:760px}
+
+  /* ===== 页头 ===== */
+  .wzh_header{margin-bottom:22px}
+  .wzh_header h1{font-size:24px;letter-spacing:.5px}
+  .wzh_header p{margin-top:8px;font-size:13.5px;color:#6b7280}
+
+  /* ===== 选项卡容器 ===== */
+  .wzh_tabs{
+    background:#fff;border-radius:16px;overflow:hidden;
+    box-shadow:0 10px 30px rgba(15,23,42,.08);border:1px solid #e6eaf2;
+  }
+
+  /* 选项卡按钮栏 */
+  .wzh_tablist{
+    display:flex;position:relative;
+    background:#f8fafc;border-bottom:1px solid #e6eaf2;
+    overflow-x:auto;scrollbar-width:none;
+  }
+  .wzh_tablist::-webkit-scrollbar{display:none}
+
+  /* 单个选项卡 */
+  .wzh_tab{
+    flex:1 1 0;min-width:110px;
+    border:none;background:transparent;cursor:pointer;
+    font-family:inherit;font-size:14.5px;color:#64748b;
+    padding:15px 10px;position:relative;
+    transition:color .18s ease,background .18s ease;
+    white-space:nowrap;
+  }
+  .wzh_tab:hover{color:#0f172a;background:#f1f5f9}
+
+  /* 选中态：文字加深 + 底部指示条 */
+  .wzh_tab.wzh_is_active{color:#c2410c;font-weight:bold;background:#fff}
+  .wzh_tab.wzh_is_active::after{
+    content:"";position:absolute;left:18%;right:18%;bottom:0;height:3px;
+    border-radius:3px 3px 0 0;
+    background:linear-gradient(90deg,#f97316,#e11d48);
+  }
+  /* 键盘聚焦时给出可见焦点环 */
+  .wzh_tab:focus-visible{outline:2px solid #fdba74;outline-offset:-3px}
+
+  /* ===== 面板 ===== */
+  .wzh_panels{padding:6px 20px 8px}
+  .wzh_panel[hidden]{display:none}
+  .wzh_panel{padding:14px 0 6px}
+
+  /* 新闻条目 */
+  .wzh_news{
+    display:flex;gap:12px;padding:13px 0;
+    border-bottom:1px dashed #eef2f7;
+  }
+  .wzh_news:last-child{border-bottom:none}
+  .wzh_news_no{
+    flex:0 0 22px;height:22px;border-radius:6px;
+    background:#fff1e6;color:#ea580c;
+    font-size:12px;font-weight:bold;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .wzh_news_body{flex:1 1 auto;min-width:0}
+  .wzh_news_title{font-size:14.5px;color:#111827;line-height:1.55}
+  .wzh_news_meta{margin-top:5px;font-size:12px;color:#9ca3af}
+  .wzh_news_hot{color:#e11d48;font-weight:bold}
+
+  /* ===== 页脚 ===== */
+  .wzh_footer{margin-top:20px;font-size:12.5px;color:#9ca3af;text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wzh_page">
+
+  <header class="wzh_header">
+    <h1>新闻选项卡</h1>
+    <p>点击上方选项卡切换分类；支持 ← → 方向键、Home / End 键操作。</p>
+  </header>
+
+  <!-- data-tabs 是自动初始化的标记，data-tab-default="0" 指定默认选中第一个 -->
+  <div class="wzh_tabs" data-tabs data-tab-default="0">
+
+    <!-- 选项卡按钮栏：role=tablist 让读屏软件识别为一组选项卡 -->
+    <div class="wzh_tablist" role="tablist" aria-label="新闻分类">
+      <button class="wzh_tab" type="button" role="tab"
+              id="wzh_tab_domestic" aria-controls="wzh_panel_domestic" aria-selected="true">国内新闻</button>
+      <button class="wzh_tab" type="button" role="tab"
+              id="wzh_tab_province" aria-controls="wzh_panel_province" aria-selected="false">省内新闻</button>
+      <button class="wzh_tab" type="button" role="tab"
+              id="wzh_tab_world" aria-controls="wzh_panel_world" aria-selected="false">国际新闻</button>
+      <button class="wzh_tab" type="button" role="tab"
+              id="wzh_tab_hot" aria-controls="wzh_panel_hot" aria-selected="false">最热新闻</button>
+    </div>
+
+    <!-- 面板区 -->
+    <div class="wzh_panels">
+
+      <!-- 国内新闻（默认显示：不带 hidden） -->
+      <section class="wzh_panel" id="wzh_panel_domestic" role="tabpanel" aria-labelledby="wzh_tab_domestic">
+        <div class="wzh_news"><span class="wzh_news_no">1</span><div class="wzh_news_body"><div class="wzh_news_title">全国多地启动冬季供暖保障，管网检修完成率超九成</div><div class="wzh_news_meta">新华社 · 2 小时前</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">2</span><div class="wzh_news_body"><div class="wzh_news_title">新版城市轨道交通运营规范发布，明年起施行</div><div class="wzh_news_meta">人民日报 · 3 小时前</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">3</span><div class="wzh_news_body"><div class="wzh_news_title">高铁新线开通，两地通行时间缩短至 90 分钟</div><div class="wzh_news_meta">央视新闻 · 5 小时前</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">4</span><div class="wzh_news_body"><div class="wzh_news_title">多所高校公布寒假安排，图书馆开放时间同步调整</div><div class="wzh_news_meta">中国青年报 · 6 小时前</div></div></div>
+      </section>
+
+      <!-- 省内新闻 -->
+      <section class="wzh_panel" id="wzh_panel_province" role="tabpanel" aria-labelledby="wzh_tab_province" hidden>
+        <div class="wzh_news"><span class="wzh_news_no">1</span><div class="wzh_news_body"><div class="wzh_news_title">省内首条智慧高速完成全路段感知设备布设</div><div class="wzh_news_meta">省交通厅 · 1 小时前</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">2</span><div class="wzh_news_body"><div class="wzh_news_title">省图书馆新馆开放夜间自习区，延长至 22 点</div><div class="wzh_news_meta">省文旅厅 · 4 小时前</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">3</span><div class="wzh_news_body"><div class="wzh_news_title">本地农产品电商直播季启动，覆盖 40 个县域</div><div class="wzh_news_meta">省农业农村厅 · 昨天</div></div></div>
+      </section>
+
+      <!-- 国际新闻 -->
+      <section class="wzh_panel" id="wzh_panel_world" role="tabpanel" aria-labelledby="wzh_tab_world" hidden>
+        <div class="wzh_news"><span class="wzh_news_no">1</span><div class="wzh_news_body"><div class="wzh_news_title">国际能源署发布年度报告，可再生能源装机再创新高</div><div class="wzh_news_meta">路透社 · 2 小时前</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">2</span><div class="wzh_news_body"><div class="wzh_news_title">多国联合开展海洋生态科考，重点关注珊瑚礁退化</div><div class="wzh_news_meta">美联社 · 5 小时前</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">3</span><div class="wzh_news_body"><div class="wzh_news_title">全球芯片供应链会议闭幕，达成三项合作共识</div><div class="wzh_news_meta">彭博社 · 8 小时前</div></div></div>
+      </section>
+
+      <!-- 最热新闻 -->
+      <section class="wzh_panel" id="wzh_panel_hot" role="tabpanel" aria-labelledby="wzh_tab_hot" hidden>
+        <div class="wzh_news"><span class="wzh_news_no">1</span><div class="wzh_news_body"><div class="wzh_news_title">国产大型邮轮完成第二次商业航次，载客率超九成</div><div class="wzh_news_meta">热度 <span class="wzh_news_hot">98.6 万</span> · 今日</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">2</span><div class="wzh_news_body"><div class="wzh_news_title">寒潮南下，多省份发布大风蓝色预警</div><div class="wzh_news_meta">热度 <span class="wzh_news_hot">76.3 万</span> · 今日</div></div></div>
+        <div class="wzh_news"><span class="wzh_news_no">3</span><div class="wzh_news_body"><div class="wzh_news_title">冬季流感进入高发期，医生提示三类人群重点防护</div><div class="wzh_news_meta">热度 <span class="wzh_news_hot">64.1 万</span> · 今日</div></div></div>
+      </section>
+
+    </div>
+  </div>
+
+  <footer class="wzh_footer">
+    选项卡逻辑在 <code>js/news-tabs.js</code> 中，使用事件委托与先清除后设置的状态切换方式。
+  </footer>
+</div>
+
+<script src="js/news-tabs.js"></script>
+</body>
+</html>

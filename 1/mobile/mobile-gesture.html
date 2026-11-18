@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--
+  作者：王子涵
+  建立时间：2026-11-16
+  使用模型：DeepSeek-V4.1-Flash
+  功能名称：任务二 · 手势卡片（左右滑动切换中华美食）
+  功能简介：4 道中华美食卡片，监听 touchstart / touchend 用 changedTouches 计算横向位移，
+            40px 阈值判定滑动、300ms 冷却防止连滑跳两张、0.3s 过渡动画、边界给出提示；
+            容器加 touch-action:pan-y，横向手势归自己、纵向仍可滚动页面。
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="移动端课堂实践任务二：手指左右滑动切换中华美食卡片">
+<title>任务二 · 手势卡片 | 王子涵</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    background:
+      radial-gradient(900px 420px at 10% -6%, rgba(232,99,47,.15), transparent 62%),
+      radial-gradient(720px 360px at 92% 4%, rgba(124,58,237,.12), transparent 60%),
+      #f7f6f3;
+    color:#1f2937;line-height:1.7;
+    min-height:100vh;padding:26px 16px 52px;
+    display:flex;justify-content:center;
+  }
+  .wzh_page{width:100%;max-width:440px}
+
+  /* ===== 页头 ===== */
+  .wzh_crumb{font-size:12.5px;color:#8a94a6;margin-bottom:12px}
+  .wzh_crumb a{color:#c2410c;font-weight:bold;text-decoration:none}
+  .wzh_kicker{
+    display:inline-block;font-size:12px;font-weight:bold;letter-spacing:.16em;
+    color:#c2410c;background:#fff1e6;border:1px solid #ffd7bd;
+    padding:4px 10px;border-radius:999px;
+  }
+  h1{margin:12px 0 6px;font-size:25px;letter-spacing:-.3px;line-height:1.35}
+  .wzh_sub{font-size:13.5px;color:#57606f}
+  .wzh_meta{margin-top:8px;font-size:12px;color:#9aa3b2}
+
+  /* ===== 卡片舞台 ===== */
+  .wzh_deck{
+    margin-top:18px;
+    border-radius:24px;overflow:hidden;
+    box-shadow:0 18px 40px rgba(30,41,59,.16);
+    touch-action:pan-y;          /* 横向手势自己接管，纵向仍交给浏览器滚动 */
+    user-select:none;
+    -webkit-user-select:none;
+    cursor:grab;
+  }
+  .wzh_deck:active{cursor:grabbing}
+  .wzh_track{display:flex;will-change:transform}
+
+  /* 单张卡片 */
+  .wzh_slide{
+    flex:0 0 100%;min-width:100%;
+    min-height:352px;
+    padding:26px 24px 24px;
+    display:flex;flex-direction:column;justify-content:space-between;
+    color:#fff;position:relative;overflow:hidden;
+  }
+  .wzh_slide::after{
+    content:"";position:absolute;right:-52px;top:-52px;
+    width:170px;height:170px;border-radius:50%;
+    background:rgba(255,255,255,.11);pointer-events:none;
+  }
+  .wzh_slide_no{
+    font-family:Georgia,serif;font-size:13px;letter-spacing:.22em;
+    color:rgba(255,255,255,.72);
+  }
+  .wzh_slide h2{
+    margin:10px 0 0;font-size:34px;line-height:1.2;letter-spacing:1px;
+    text-shadow:0 2px 14px rgba(0,0,0,.18);
+  }
+  .wzh_region{
+    display:inline-block;margin-top:10px;font-size:12px;
+    color:#fff;background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.28);
+    border-radius:999px;padding:2px 10px;
+    backdrop-filter:blur(2px);
+  }
+  .wzh_slide p{
+    margin-top:14px;font-size:13.8px;line-height:1.85;
+    color:rgba(255,255,255,.9);max-width:310px;
+  }
+  .wzh_tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
+  .wzh_tags span{
+    font-size:11.5px;color:#fff;background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.24);border-radius:8px;padding:2px 8px;
+  }
+
+  /* 四道菜各自的渐变背景 */
+  .wzh_slide.wzh_duck{background:linear-gradient(150deg,#7f1d1d 0%,#b45309 62%,#d97706 100%)}
+  .wzh_slide.wzh_noodle{background:linear-gradient(150deg,#1e3a8a 0%,#0e7490 58%,#0891b2 100%)}
+  .wzh_slide.wzh_dumpling{background:linear-gradient(150deg,#831843 0%,#be185d 55%,#fb7185 100%)}
+  .wzh_slide.wzh_tofu{background:linear-gradient(150deg,#7c2d12 0%,#b91c1c 58%,#ef4444 100%)}
+
+  /* ===== 进度与提示 ===== */
+  .wzh_bar{
+    margin-top:16px;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:0 4px;
+  }
+  .wzh_dots{display:flex;gap:6px}
+  .wzh_dot{
+    width:7px;height:7px;border-radius:50%;background:#d6d3cd;
+    transition:background .25s ease,transform .25s ease;
+  }
+  .wzh_dot.wzh_on{background:linear-gradient(135deg,#f97316,#e11d48);transform:scale(1.35)}
+  .wzh_count{font-size:12.5px;color:#8a94a6}
+  .wzh_count b{color:#c2410c;font-size:14px}
+
+  .wzh_hint{
+    margin-top:12px;min-height:44px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:13px;color:#6b7280;
+    background:#fff;border:1px solid #efede7;border-radius:12px;
+    padding:10px 14px;
+    transition:color .2s ease,border-color .2s ease,background .2s ease;
+  }
+  .wzh_hint.wzh_warn{color:#b45309;border-color:#f3c99b;background:#fffaf4}
+  .wzh_hint.wzh_go{color:#c2410c;border-color:#ffd7bd;background:#fff7f1}
+
+  /* ===== 说明 ===== */
+  .wzh_card{
+    margin-top:18px;background:#fff;border:1px solid #ece9e2;border-radius:16px;
+    padding:16px 18px;box-shadow:0 8px 22px rgba(30,41,59,.06);
+  }
+  .wzh_card h3{font-size:14.5px;margin-bottom:8px;color:#111827}
+  .wzh_card ul{list-style:none;display:grid;gap:8px;font-size:13px;color:#4b5563}
+  .wzh_card li{position:relative;padding-left:18px}
+  .wzh_card li::before{
+    content:"";position:absolute;left:4px;top:8px;width:6px;height:6px;border-radius:50%;
+    background:linear-gradient(135deg,#f97316,#e11d48);
+  }
+  .wzh_card code{
+    font-family:Consolas,monospace;font-size:12.3px;color:#b91c1c;
+    background:#fff1f2;padding:1px 5px;border-radius:5px;
+  }
+
+  .wzh_foot{
+    margin-top:22px;display:flex;flex-wrap:wrap;gap:8px 16px;
+    justify-content:space-between;font-size:12.5px;color:#9ca3af;
+  }
+  .wzh_foot a{color:#c2410c;font-weight:bold;text-decoration:none}
+
+  @media (max-width:420px){
+    h1{font-size:22px}
+    .wzh_slide{min-height:330px;padding:22px 20px}
+    .wzh_slide h2{font-size:29px}
+  }
+</style>
+</head>
+<body>
+<div class="wzh_page">
+
+  <p class="wzh_crumb"><a href="./index.html">← 移动端课堂实践</a></p>
+  <span class="wzh_kicker">任务二 · ⭐⭐ 手势识别</span>
+  <h1>手势卡片：左右滑动看中华美食</h1>
+  <p class="wzh_sub">按住卡片向左滑是下一道，向右滑是上一道；短距离误触不切换，滑到头会给出提示。</p>
+  <p class="wzh_meta">王子涵 · 学号 24001010807 · 阈值 40px ｜ 冷却 300ms ｜ 过渡 0.3s</p>
+
+  <!-- 卡片舞台：touch-action:pan-y 只接管横向手势 -->
+  <div class="wzh_deck" id="wzhDeck">
+    <div class="wzh_track" id="wzhTrack">
+
+      <article class="wzh_slide wzh_duck">
+        <div>
+          <span class="wzh_slide_no">01 / 04</span>
+          <h2>北京烤鸭</h2>
+          <span class="wzh_region">北京 · 京菜</span>
+          <p>果木炭火慢烤，鸭皮呈枣红色，片成薄片后蘸甜面酱、卷荷叶饼，配葱丝与黄瓜条，皮酥而肉嫩。</p>
+          <div class="wzh_tags"><span>果木挂炉</span><span>片皮卷饼</span><span>皮酥肉嫩</span></div>
+        </div>
+      </article>
+
+      <article class="wzh_slide wzh_noodle">
+        <div>
+          <span class="wzh_slide_no">02 / 04</span>
+          <h2>兰州牛肉面</h2>
+          <span class="wzh_region">甘肃 · 兰州</span>
+          <p>讲究"一清二白三红四绿五黄"：汤清、萝卜白、辣油红、香菜蒜苗绿、面条黄亮，拉面有九种粗细可选。</p>
+          <div class="wzh_tags"><span>手工拉面</span><span>清汤牛肉</span><span>九种面型</span></div>
+        </div>
+      </article>
+
+      <article class="wzh_slide wzh_dumpling">
+        <div>
+          <span class="wzh_slide_no">03 / 04</span>
+          <h2>广式虾饺</h2>
+          <span class="wzh_region">广东 · 广州</span>
+          <p>澄面做皮，蒸后晶莹透亮，能看到里面整只虾仁；褶子要捏到十三道以上，入口皮薄弹牙、虾味清甜。</p>
+          <div class="wzh_tags"><span>水晶澄皮</span><span>整只虾仁</span><span>早茶必点</span></div>
+        </div>
+      </article>
+
+      <article class="wzh_slide wzh_tofu">
+        <div>
+          <span class="wzh_slide_no">04 / 04</span>
+          <h2>麻婆豆腐</h2>
+          <span class="wzh_region">四川 · 成都</span>
+          <p>牛肉末炒香，加郫县豆瓣与花椒面，豆腐嫩而不散，"麻、辣、烫、香、酥、嫩、鲜、活"八字俱全，一勺就能下饭。</p>
+          <div class="wzh_tags"><span>郫县豆瓣</span><span>花椒麻香</span><span>下饭神器</span></div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- 进度与提示 -->
+  <div class="wzh_bar">
+    <div class="wzh_dots" id="wzhDots" aria-hidden="true">
+      <span class="wzh_dot wzh_on"></span><span class="wzh_dot"></span>
+      <span class="wzh_dot"></span><span class="wzh_dot"></span>
+    </div>
+    <div class="wzh_count">第 <b id="wzhCount">1</b> / 4 张</div>
+  </div>
+  <div class="wzh_hint" id="wzhHint" role="status" aria-live="polite">← 向左滑看下一道 · 向右滑回上一道 →</div>
+
+  <section class="wzh_card">
+    <h3>验收点实现说明</h3>
+    <ul>
+      <li><b>阈值生效：</b><code>touchend</code> 时用 <code>changedTouches[0]</code> 算横向位移，绝对值小于 40px 直接回弹，不会误切。</li>
+      <li><b>不一次跳两张：</b>切换后进入 300ms 冷却（<code>wzh_cooling</code>），冷却期内再滑被忽略。</li>
+      <li><b>页面不跟着滚：</b>容器加 <code>touch-action:pan-y</code>；判定为横向拖动时才 <code>preventDefault()</code>，纵向仍可滚动。</li>
+      <li><b>过渡动画：</b>轨道 <code>transform</code> 配 0.3s 缓动；拖动时关闭过渡实现跟手，松手后恢复。</li>
+      <li><b>边界提示：</b>第一张右滑、第四张左滑都走 30% 阻尼并提示"已经是第一张 / 最后一张"。</li>
+    </ul>
+  </section>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 高级网页设计</span>
+    <span><a href="./mobile-zoom.html">下一个任务：图片查看器 →</a> ｜ <a href="./index.html">返回总览</a></span>
+  </footer>
+
+</div>
+
+<script>
+/* ===================================================================
+   功能名称：任务二手势卡片交互
+   功能简介：用 touch 事件驱动 4 张美食卡片的横向切换，包含阈值判断、
+             冷却锁、边界阻尼与进度同步；另加鼠标拖拽分支，方便桌面调试。
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var wzh_deck = document.getElementById('wzhDeck');
+  var wzh_track = document.getElementById('wzhTrack');
+  var wzh_slides = wzh_track.querySelectorAll('.wzh_slide');
+  var wzh_dots = document.querySelectorAll('.wzh_dot');
+  var wzh_countEl = document.getElementById('wzhCount');
+  var wzh_hintEl = document.getElementById('wzhHint');
+
+  var wzh_total = wzh_slides.length;   // 卡片总数
+  var wzh_index = 0;                  // 当前第几张（从 0 开始）
+  var wzh_width = wzh_deck.clientWidth || 320; // 单张卡片宽度
+
+  var wzh_startX = 0;                 // 按下时的横坐标
+  var wzh_startY = 0;                 // 按下时的纵坐标
+  var wzh_dragging = false;           // 本次触摸是否已经判定为横向拖动
+  var wzh_cooling = false;            // 冷却中：防止快速连滑一次跳两张
+  var wzh_hintTimer = null;           // 提示文案的复原定时器
+
+  var wzh_THRESHOLD = 40;             // 切换阈值：40px
+  var wzh_COOLDOWN = 300;             // 冷却时间：300ms
+  var wzh_DAMPING = 0.3;              // 边界阻尼系数
+
+  /**
+   * 功能名称：wzh_applyPosition
+   * 功能简介：把卡片轨道移动到「当前索引 + 手指偏移」的位置。
+   *           拖动中传入 animate=false 关闭过渡以保证跟手，松手后传 true 走 0.3s 动画。
+   * 副作用：直接改写轨道 style 的 transform 与 transition。
+   */
+  function wzh_applyPosition(wzh_offset, wzh_animate) {
+    wzh_width = wzh_deck.clientWidth || wzh_width;
+    wzh_track.style.transition = wzh_animate
+      ? 'transform .3s cubic-bezier(.22,.61,.36,1)'
+      : 'none';
+    wzh_track.style.transform = 'translateX(' + (-wzh_index * wzh_width + (wzh_offset || 0)) + 'px)';
+  }
+
+  /**
+   * 功能名称：wzh_updateMeta
+   * 功能简介：同步底部进度文字与圆点高亮，让用户知道当前是第几张。
+   */
+  function wzh_updateMeta() {
+    wzh_countEl.textContent = String(wzh_index + 1);
+    for (var wzh_i = 0; wzh_i < wzh_dots.length; wzh_i++) {
+      wzh_dots[wzh_i].classList.toggle('wzh_on', wzh_i === wzh_index);
+    }
+  }
+
+  /**
+   * 功能名称：wzh_showHint
+   * 功能简介：在提示条上显示一条临时文案（边界提示或切换反馈），
+   *           1.6 秒后自动恢复默认操作提示。
+   * 参数：wzh_text 文案；wzh_tone 语气（warn 警告 / go 前进）。
+   */
+  function wzh_showHint(wzh_text, wzh_tone) {
+    wzh_hintEl.textContent = wzh_text;
+    wzh_hintEl.className = 'wzh_hint' + (wzh_tone ? ' wzh_' + wzh_tone : '');
+
+    clearTimeout(wzh_hintTimer);
+    wzh_hintTimer = setTimeout(function () {
+      wzh_hintEl.textContent = '← 向左滑看下一道 · 向右滑回上一道 →';
+      wzh_hintEl.className = 'wzh_hint';
+    }, 1600);
+  }
+
+  /**
+   * 功能名称：wzh_go
+   * 功能简介：按方向切换卡片。越界时不切换，只做回弹与提示；
+   *           切换成功后进入 300ms 冷却，期间后续滑动会被忽略。
+   * 参数：wzh_step 为 1（下一张）或 -1（上一张）。
+   */
+  function wzh_go(wzh_step) {
+    if (wzh_cooling) return;
+
+    var wzh_next = wzh_index + wzh_step;
+
+    // 边界：第一张再右滑 / 最后一张再左滑
+    if (wzh_next < 0 || wzh_next >= wzh_total) {
+      wzh_applyPosition(0, true);
+      wzh_showHint(wzh_next < 0 ? '已经是第一张了，向右没有更早的美食' : '已经是最后一张了，向左没有更多美食', 'warn');
+      return;
+    }
+
+    wzh_index = wzh_next;
+    wzh_applyPosition(0, true);
+    wzh_updateMeta();
+    wzh_showHint(wzh_step > 0 ? '已切到第 ' + (wzh_index + 1) + ' 张' : '已回到第 ' + (wzh_index + 1) + ' 张', 'go');
+
+    // 冷却锁：300ms 内不再响应，避免一次快速连滑跳两张
+    wzh_cooling = true;
+    setTimeout(function () { wzh_cooling = false; }, wzh_COOLDOWN);
+  }
+
+  // ===== 触摸事件：按下 =====
+  wzh_deck.addEventListener('touchstart', function (wzh_e) {
+    if (wzh_e.touches.length > 1) return;      // 多指不参与切换
+    var wzh_t = wzh_e.touches[0];
+    wzh_startX = wzh_t.clientX;
+    wzh_startY = wzh_t.clientY;
+    wzh_dragging = false;
+    wzh_track.style.transition = 'none';       // 拖动期间关掉过渡
+  }, { passive: true });
+
+  // ===== 触摸事件：移动（跟手 + 方向判定） =====
+  wzh_deck.addEventListener('touchmove', function (wzh_e) {
+    if (wzh_cooling || wzh_e.touches.length > 1) return;
+    var wzh_t = wzh_e.touches[0];
+    var wzh_dx = wzh_t.clientX - wzh_startX;
+    var wzh_dy = wzh_t.clientY - wzh_startY;
+
+    // 先判断方向：横向位移明显大于纵向才接管，否则把纵向留给页面滚动
+    if (!wzh_dragging) {
+      if (Math.abs(wzh_dx) < 8) return;
+      if (Math.abs(wzh_dx) <= Math.abs(wzh_dy)) return;
+      wzh_dragging = true;
+    }
+
+    wzh_e.preventDefault(); // 接管横向手势，避免页面跟着抖
+
+    var wzh_offset = wzh_dx;
+    // 边界阻尼：第一张往右、最后一张往左时只跟 30%，提示"到头了"
+    if ((wzh_index === 0 && wzh_dx > 0) || (wzh_index === wzh_total - 1 && wzh_dx < 0)) {
+      wzh_offset = wzh_dx * wzh_DAMPING;
+    }
+    wzh_applyPosition(wzh_offset, false);
+  }, { passive: false });
+
+  // ===== 触摸事件：抬手（阈值判断） =====
+  wzh_deck.addEventListener('touchend', function (wzh_e) {
+    var wzh_t = wzh_e.changedTouches[0]; // 抬手必须用 changedTouches，touches 里已经没有这根手指
+    var wzh_dx = wzh_t.clientX - wzh_startX;
+    var wzh_dy = wzh_t.clientY - wzh_startY;
+    var wzh_wasDragging = wzh_dragging;
+    wzh_dragging = false;
+
+    if (!wzh_wasDragging) return; // 只是点了一下，卡片没动过，不用处理
+
+    // 距离不足 40px，或纵向位移更大：视为误触，回弹
+    if (Math.abs(wzh_dx) < wzh_THRESHOLD || Math.abs(wzh_dx) < Math.abs(wzh_dy)) {
+      wzh_applyPosition(0, true);
+      wzh_showHint('滑动距离不足 ' + wzh_THRESHOLD + 'px，已回弹（防误触）', 'warn');
+      return;
+    }
+
+    wzh_go(wzh_dx < 0 ? 1 : -1);
+  });
+
+  // ===== 触摸被系统打断：清状态并回弹 =====
+  wzh_deck.addEventListener('touchcancel', function () {
+    wzh_dragging = false;
+    wzh_applyPosition(0, true);
+  }, { passive: true });
+
+  // ===== 桌面调试：鼠标水平拖拽也能切换（触屏以外不参与评分逻辑） =====
+  var wzh_mouseDown = false;
+  var wzh_mouseStartX = 0;
+  wzh_deck.addEventListener('mousedown', function (wzh_e) {
+    wzh_mouseDown = true;
+    wzh_mouseStartX = wzh_e.clientX;
+  });
+  window.addEventListener('mouseup', function (wzh_e) {
+    if (!wzh_mouseDown) return;
+    wzh_mouseDown = false;
+    var wzh_dx = wzh_e.clientX - wzh_mouseStartX;
+    if (Math.abs(wzh_dx) >= wzh_THRESHOLD) wzh_go(wzh_dx < 0 ? 1 : -1);
+  });
+
+  // ===== 尺寸变化（横竖屏切换）时重新对齐，避免错位 =====
+  window.addEventListener('resize', function () {
+    wzh_applyPosition(0, false);
+  });
+
+  // 初始化：定位到第 1 张并同步进度
+  wzh_updateMeta();
+  wzh_applyPosition(0, false);
+})();
+</script>
+</body>
+</html>

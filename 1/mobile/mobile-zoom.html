@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<!--
+  作者：王子涵
+  建立时间：2026-11-16
+  使用模型：DeepSeek-V4.1-Flash
+  功能名称：任务三 · 图片查看器（双指缩放 + 双击放大 + 拖动）
+  功能简介：在 touch-action:none 的容器内实现 1～4 倍双指缩放（以两指中点为基准）、
+            双击在 1x/2x 间切换、放大后单指拖动并限制在边界内、缩回 1x 自动居中；
+            页面内已预留手机实体演示视频的播放器位置。
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="移动端课堂实践任务三：可双指缩放、双击放大、单指拖动的图片查看器">
+<title>任务三 · 图片查看器 | 王子涵</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    background:
+      radial-gradient(900px 420px at 12% -8%, rgba(232,99,47,.13), transparent 62%),
+      radial-gradient(760px 380px at 92% 2%, rgba(124,58,237,.12), transparent 60%),
+      #f7f6f3;
+    color:#1f2937;line-height:1.7;
+    min-height:100vh;padding:26px 16px 52px;
+    display:flex;justify-content:center;
+  }
+  .wzh_page{width:100%;max-width:520px}
+
+  .wzh_crumb{font-size:12.5px;color:#8a94a6;margin-bottom:12px}
+  .wzh_crumb a{color:#c2410c;font-weight:bold;text-decoration:none}
+  .wzh_kicker{
+    display:inline-block;font-size:12px;font-weight:bold;letter-spacing:.16em;
+    color:#6d28d9;background:#f5f3ff;border:1px solid #e9e3ff;
+    padding:4px 10px;border-radius:999px;
+  }
+  h1{margin:12px 0 6px;font-size:25px;letter-spacing:-.3px;line-height:1.35}
+  .wzh_sub{font-size:13.5px;color:#57606f}
+  .wzh_meta{margin-top:8px;font-size:12px;color:#9aa3b2}
+
+  /* ===== 查看器 ===== */
+  .wzh_viewer{
+    position:relative;margin-top:16px;
+    height:60vh;min-height:320px;max-height:520px;
+    border-radius:20px;overflow:hidden;
+    background:#0f172a;
+    box-shadow:0 18px 40px rgba(15,23,42,.28);
+    touch-action:none;              /* 手势全部自己接管，浏览器别缩放/滚动 */
+    user-select:none;
+    -webkit-user-select:none;
+    cursor:zoom-in;
+  }
+  .wzh_photo{
+    position:absolute;left:0;top:0;
+    width:100%;height:100%;
+    object-fit:cover;
+    transform-origin:0 0;           /* 用左上角做原点，位移补偿才好算 */
+    will-change:transform;
+    -webkit-user-drag:none;
+    pointer-events:none;            /* 事件统一交给容器，避免图片拖拽抢走手势 */
+  }
+  .wzh_badge{
+    position:absolute;right:12px;top:12px;
+    font-family:Consolas,monospace;font-size:12px;color:#e2e8f0;
+    background:rgba(15,23,42,.62);border:1px solid rgba(226,232,240,.24);
+    border-radius:999px;padding:3px 10px;
+    backdrop-filter:blur(4px);
+    pointer-events:none;
+  }
+  .wzh_hintbar{
+    position:absolute;left:12px;right:12px;bottom:12px;
+    font-size:12px;color:#e2e8f0;text-align:center;
+    background:rgba(15,23,42,.55);border:1px solid rgba(226,232,240,.18);
+    border-radius:11px;padding:7px 10px;
+    backdrop-filter:blur(4px);
+    pointer-events:none;
+  }
+
+  /* ===== 视频占位 ===== */
+  .wzh_card{
+    margin-top:16px;background:#fff;border:1px solid #ece9e2;border-radius:16px;
+    padding:16px 18px;box-shadow:0 8px 22px rgba(30,41,59,.06);
+  }
+  .wzh_card h2{font-size:15.5px;margin-bottom:10px}
+  .wzh_card h2 .wzh_tag{
+    font-size:11.5px;font-weight:normal;color:#6d28d9;background:#f5f3ff;
+    border:1px solid #e9e3ff;border-radius:999px;padding:1px 8px;margin-left:8px;
+  }
+  .wzh_video_box{
+    position:relative;border-radius:14px;overflow:hidden;
+    background:#0b1220;aspect-ratio:9/16;max-height:430px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .wzh_video_box video{width:100%;height:100%;object-fit:contain;background:#0b1220}
+  .wzh_video_ph{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:8px;
+    padding:24px;text-align:center;color:#cbd5e1;font-size:12.8px;line-height:1.8;
+  }
+  .wzh_video_ph strong{color:#fbbf24;font-size:13.5px}
+  .wzh_video_ph .wzh_play{
+    width:52px;height:52px;border-radius:50%;
+    border:1px dashed rgba(251,191,36,.66);
+    display:flex;align-items:center;justify-content:center;
+    color:#fbbf24;font-size:20px;margin-bottom:4px;
+  }
+  .wzh_video_ph code{
+    font-family:Consolas,monospace;font-size:12px;color:#fcd34d;
+    background:rgba(251,191,36,.12);padding:1px 6px;border-radius:5px;
+  }
+  .wzh_video_box.wzh_has_video .wzh_video_ph{display:none}
+
+  /* ===== 说明 ===== */
+  .wzh_card p{font-size:13.4px;color:#4b5563}
+  .wzh_card p+p{margin-top:8px}
+  .wzh_card b{color:#111827}
+  .wzh_card code{
+    font-family:Consolas,monospace;font-size:12.3px;color:#b91c1c;
+    background:#fff1f2;padding:1px 5px;border-radius:5px;
+  }
+  .wzh_steps{list-style:none;counter-reset:wzh_s;display:grid;gap:9px;margin-top:4px}
+  .wzh_steps li{
+    counter-increment:wzh_s;position:relative;padding-left:28px;
+    font-size:13.2px;color:#4b5563;
+  }
+  .wzh_steps li::before{
+    content:counter(wzh_s);position:absolute;left:0;top:1px;
+    width:19px;height:19px;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:bold;color:#fff;
+    background:linear-gradient(135deg,#7c3aed,#2563eb);
+  }
+
+  .wzh_foot{
+    margin-top:22px;display:flex;flex-wrap:wrap;gap:8px 16px;
+    justify-content:space-between;font-size:12.5px;color:#9ca3af;
+  }
+  .wzh_foot a{color:#c2410c;font-weight:bold;text-decoration:none}
+
+  @media (max-width:420px){ h1{font-size:22px} .wzh_viewer{height:54vh} }
+</style>
+</head>
+<body>
+<div class="wzh_page">
+
+  <p class="wzh_crumb"><a href="./index.html">← 移动端课堂实践</a></p>
+  <span class="wzh_kicker">任务三 · ⭐⭐⭐ 多指手势</span>
+  <h1>图片查看器：双指缩放 · 双击放大 · 拖动</h1>
+  <p class="wzh_sub">双指可缩放 1～4 倍，双击在 1x / 2x 之间切换，放大后单指拖动查看细节，缩回 1x 自动居中。</p>
+  <p class="wzh_meta">王子涵 · 学号 24001010807 · 缩放范围 1×～4× ｜ 双击阈值 300ms ｜ 过渡 0.25s</p>
+
+  <!-- 查看器：所有手势都在这个容器里接管 -->
+  <div class="wzh_viewer" id="wzhViewer">
+    <img class="wzh_photo" id="wzhPhoto" src="./img/zoom-sample.jpg"
+         alt="黄昏时分挂着红灯笼的中式庭院门楼，木雕与瓦当细节丰富">
+    <div class="wzh_badge" id="wzhBadge">1.0×</div>
+    <div class="wzh_hintbar" id="wzhHintbar">请用手机打开：双指缩放 · 双击 1x/2x · 放大后单指拖动</div>
+  </div>
+
+  <!-- 手机实体演示视频：先留播放器占位 -->
+  <section class="wzh_card">
+    <h2>手机实体演示视频<span class="wzh_tag">待上传</span></h2>
+    <div class="wzh_video_box" id="wzhVideoBox">
+      <video id="wzhVideo" controls playsinline preload="metadata" webkit-playsinline
+             src="./videos/task3-zoom.mp4"></video>
+      <div class="wzh_video_ph">
+        <div class="wzh_play" aria-hidden="true">▶</div>
+        <strong>演示视频录制中</strong>
+        <span>用另一台设备拍摄手机屏幕上的双指缩放过程，<br>命名为 <code>task3-zoom.mp4</code> 放入 <code>1/mobile/videos/</code>，刷新本页即可播放。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 答辩准备：如何保证缩放不跳 -->
+  <section class="wzh_card">
+    <h2>我如何保证「缩放不跳」</h2>
+    <ol class="wzh_steps">
+      <li><b>固定原点：</b>图片的 <code>transform-origin</code> 设为 <code>0 0</code>，缩放与位移都在同一套坐标系里算，避免浏览器默认中心缩放带来的二次偏移。</li>
+      <li><b>锚点补偿：</b>每帧记录两指中点 <code>mid</code>，缩放比例 <code>k = 新倍率 / 起始倍率</code>，用 <code>tx = mid - (起始mid - 起始tx) × k</code> 反推平移量，让中点下的那个像素始终停在原地。</li>
+      <li><b>只用起始基准：</b>整段手势都拿 touchend 前的起始距离做分母，而不是拿"上一帧"做分母，避免误差逐帧累积、越缩越飘。</li>
+      <li><b>手势期间关过渡：</b>touchmove 里把 <code>transition</code> 置空，保证跟手；松手或双击时才恢复 0.25s 过渡。</li>
+      <li><b>清场：</b>换手势时重置基准（<code>wzh_pinchStartDist = 0</code>），并在 <code>touchcancel</code> 里把状态复位，接电话回来不会跳一下。</li>
+      <li><b>边界收敛：</b>缩放后按 <code>tx ∈ [容器宽 - 容器宽×倍率, 0]</code> 夹紧，松手再收敛一次，1x 时强制回到居中，所以既拖不出边界，也不会越缩越偏。</li>
+    </ol>
+  </section>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 高级网页设计</span>
+    <span><a href="./mobile-sensor.html">下一个任务：摇一摇 →</a> ｜ <a href="./index.html">返回总览</a></span>
+  </footer>
+
+</div>
+
+<script>
+/* ===================================================================
+   功能名称：任务三图片查看器手势
+   功能简介：在 touch-action:none 的容器里实现双指缩放（1～4 倍）、双击 1x/2x 切换、
+             放大后单指拖动与边界限制；所有变换都以容器左上角为原点计算。
+   =================================================================== */
+(function () {
+  'use strict';
+
+  var wzh_viewer = document.getElementById('wzhViewer');
+  var wzh_photo = document.getElementById('wzhPhoto');
+  var wzh_badge = document.getElementById('wzhBadge');
+  var wzh_hintbar = document.getElementById('wzhHintbar');
+
+  var wzh_MIN_SCALE = 1;      // 最小倍率
+  var wzh_MAX_SCALE = 4;      // 最大倍率
+  var wzh_TAP_GAP = 300;      // 双击时间窗
+  var wzh_TAP_MOVE = 12;      // 超过这个位移就不算点击
+
+  var wzh_scale = 1;          // 当前倍率
+  var wzh_tx = 0;             // 当前横向位移
+  var wzh_ty = 0;             // 当前纵向位移
+
+  // —— 手势基准（每次手势开始时记录，过程中不变）——
+  var wzh_mode = 'none';      // none / drag / pinch
+  var wzh_startX = 0;
+  var wzh_startY = 0;
+  var wzh_startTx = 0;
+  var wzh_startTy = 0;
+  var wzh_pinchStartDist = 0;
+  var wzh_pinchStartScale = 1;
+  var wzh_pinchStartTx = 0;
+  var wzh_pinchStartTy = 0;
+  var wzh_pinchStartMidX = 0; // 手势开始时两指中点（相对容器）
+  var wzh_pinchStartMidY = 0;
+
+  // —— 双击判定 ——
+  var wzh_lastTapTime = 0;
+  var wzh_lastTapX = 0;
+  var wzh_lastTapY = 0;
+  var wzh_moved = false;      // 本次触摸是否移动过（移动过就不算点击）
+
+  /**
+   * 功能名称：wzh_getRect
+   * 功能简介：取容器相对视口的位置与尺寸，用于把手指的 clientX/clientY
+   *           换算成容器内坐标。
+   */
+  function wzh_getRect() {
+    return wzh_viewer.getBoundingClientRect();
+  }
+
+  /**
+   * 功能名称：wzh_clamp
+   * 功能简介：把数值夹在最小值与最大值之间，用于倍率与边界收敛。
+   */
+  function wzh_clamp(wzh_v, wzh_min, wzh_max) {
+    return Math.min(wzh_max, Math.max(wzh_min, wzh_v));
+  }
+
+  /**
+   * 功能名称：wzh_twoFingerDist
+   * 功能简介：用勾股定理算两根手指之间的直线距离（像素），作为缩放比例的分母。
+   */
+  function wzh_twoFingerDist(wzh_t1, wzh_t2) {
+    return Math.hypot(wzh_t2.clientX - wzh_t1.clientX, wzh_t2.clientY - wzh_t1.clientY);
+  }
+
+  /**
+   * 功能名称：wzh_bounds
+   * 功能简介：按当前倍率把位移夹进合法范围——放大后的图片不能被拖离容器，
+   *           1x 时位移强制为 0（自动居中）。
+   */
+  function wzh_bounds(wzh_s, wzh_x, wzh_y) {
+    var wzh_rect = wzh_getRect();
+    if (wzh_s <= 1.001) return { x: 0, y: 0 };
+    var wzh_minX = wzh_rect.width - wzh_rect.width * wzh_s;
+    var wzh_minY = wzh_rect.height - wzh_rect.height * wzh_s;
+    return {
+      x: wzh_clamp(wzh_x, wzh_minX, 0),
+      y: wzh_clamp(wzh_y, wzh_minY, 0)
+    };
+  }
+
+  /**
+   * 功能名称：wzh_render
+   * 功能简介：把当前倍率与位移写进图片的 transform，并刷新右上角的倍率徽标。
+   * 参数：wzh_animate 为 true 时走 0.25s 过渡（双击与松手收敛用）。
+   */
+  function wzh_render(wzh_animate) {
+    wzh_photo.style.transition = wzh_animate ? 'transform .25s cubic-bezier(.22,.61,.36,1)' : 'none';
+    wzh_photo.style.transform =
+      'translate(' + wzh_tx.toFixed(2) + 'px,' + wzh_ty.toFixed(2) + 'px) scale(' + wzh_scale.toFixed(4) + ')';
+    wzh_badge.textContent = wzh_scale.toFixed(1) + '×';
+  }
+
+  /**
+   * 功能名称：wzh_setScaleAt
+   * 功能简介：以容器内某一点为锚点，把倍率设为 wzh_target，
+   *           锚点下面的像素保持不动，所以视觉上"不跳"。
+   * 参数：wzh_target 目标倍率；wzh_px / wzh_py 锚点（相对容器）。
+   */
+  function wzh_setScaleAt(wzh_target, wzh_px, wzh_py) {
+    var wzh_next = wzh_clamp(wzh_target, wzh_MIN_SCALE, wzh_MAX_SCALE);
+    var wzh_k = wzh_next / wzh_scale;
+
+    // 锚点补偿：锚点在新倍率下的位置保持不变
+    var wzh_nextTx = wzh_px - (wzh_px - wzh_tx) * wzh_k;
+    var wzh_nextTy = wzh_py - (wzh_py - wzh_ty) * wzh_k;
+    var wzh_box = wzh_bounds(wzh_next, wzh_nextTx, wzh_nextTy);
+
+    wzh_scale = wzh_next;
+    wzh_tx = wzh_box.x;
+    wzh_ty = wzh_box.y;
+  }
+
+  // ===== 按下 =====
+  wzh_viewer.addEventListener('touchstart', function (wzh_e) {
+    var wzh_rect = wzh_getRect();
+
+    if (wzh_e.touches.length >= 2) {
+      // 双指：进入缩放模式，记录起始距离、起始中点与起始位移
+      var wzh_t1 = wzh_e.touches[0];
+      var wzh_t2 = wzh_e.touches[1];
+      wzh_mode = 'pinch';
+      wzh_pinchStartDist = wzh_twoFingerDist(wzh_t1, wzh_t2);
+      wzh_pinchStartScale = wzh_scale;
+      wzh_pinchStartTx = wzh_tx;
+      wzh_pinchStartTy = wzh_ty;
+      wzh_pinchStartMidX = (wzh_t1.clientX + wzh_t2.clientX) / 2 - wzh_rect.left;
+      wzh_pinchStartMidY = (wzh_t1.clientY + wzh_t2.clientY) / 2 - wzh_rect.top;
+      wzh_moved = true;
+      return;
+    }
+
+    // 单指：记录起点，准备拖动或双击
+    var wzh_t = wzh_e.touches[0];
+    wzh_mode = 'drag';
+    wzh_startX = wzh_t.clientX;
+    wzh_startY = wzh_t.clientY;
+    wzh_startTx = wzh_tx;
+    wzh_startTy = wzh_ty;
+    wzh_moved = false;
+    wzh_photo.style.transition = 'none';
+  }, { passive: true });
+
+  // ===== 移动 =====
+  wzh_viewer.addEventListener('touchmove', function (wzh_e) {
+    var wzh_rect = wzh_getRect();
+
+    if (wzh_e.touches.length >= 2) {
+      // 双指缩放：距离比例 × 起始倍率，再以当前两指中点为锚点补偿位移
+      if (!wzh_pinchStartDist) return;
+      var wzh_t1 = wzh_e.touches[0];
+      var wzh_t2 = wzh_e.touches[1];
+      var wzh_dist = wzh_twoFingerDist(wzh_t1, wzh_t2);
+      var wzh_nextScale = wzh_clamp(
+        wzh_pinchStartScale * (wzh_dist / wzh_pinchStartDist),
+        wzh_MIN_SCALE,
+        wzh_MAX_SCALE
+      );
+
+      var wzh_midX = (wzh_t1.clientX + wzh_t2.clientX) / 2 - wzh_rect.left;
+      var wzh_midY = (wzh_t1.clientY + wzh_t2.clientY) / 2 - wzh_rect.top;
+      var wzh_k = wzh_nextScale / wzh_pinchStartScale;
+
+      var wzh_nextTx = wzh_midX - (wzh_pinchStartMidX - wzh_pinchStartTx) * wzh_k;
+      var wzh_nextTy = wzh_midY - (wzh_pinchStartMidY - wzh_pinchStartTy) * wzh_k;
+      var wzh_box = wzh_bounds(wzh_nextScale, wzh_nextTx, wzh_nextTy);
+
+      wzh_scale = wzh_nextScale;
+      wzh_tx = wzh_box.x;
+      wzh_ty = wzh_box.y;
+      wzh_render(false);
+
+      wzh_e.preventDefault(); // 阻止整页跟着放大
+      return;
+    }
+
+    // 单指：1x 时不允许拖动，放大后才跟手平移
+    if (wzh_mode !== 'drag') return;
+    var wzh_t = wzh_e.touches[0];
+    var wzh_dx = wzh_t.clientX - wzh_startX;
+    var wzh_dy = wzh_t.clientY - wzh_startY;
+
+    if (Math.abs(wzh_dx) > wzh_TAP_MOVE || Math.abs(wzh_dy) > wzh_TAP_MOVE) wzh_moved = true;
+    if (wzh_scale <= 1.001) return;
+
+    var wzh_pan = wzh_bounds(wzh_scale, wzh_startTx + wzh_dx, wzh_startTy + wzh_dy);
+    wzh_tx = wzh_pan.x;
+    wzh_ty = wzh_pan.y;
+    wzh_render(false);
+    wzh_e.preventDefault();
+  }, { passive: false });
+
+  // ===== 抬手 =====
+  wzh_viewer.addEventListener('touchend', function (wzh_e) {
+    var wzh_rect = wzh_getRect();
+    var wzh_t = wzh_e.changedTouches[0]; // 抬手用 changedTouches，touches 里已没有这根手指
+
+    // 双指松开一指：结束缩放，松手收敛一次边界
+    if (wzh_mode === 'pinch') {
+      if (wzh_e.touches.length === 0) {
+        var wzh_box = wzh_bounds(wzh_scale, wzh_tx, wzh_ty);
+        wzh_tx = wzh_box.x;
+        wzh_ty = wzh_box.y;
+        wzh_render(true);
+        wzh_mode = 'none';
+        wzh_pinchStartDist = 0;
+      }
+      return;
+    }
+
+    if (wzh_mode !== 'drag') return;
+    wzh_mode = 'none';
+
+    // 单指拖动结束：收敛边界
+    var wzh_pan = wzh_bounds(wzh_scale, wzh_tx, wzh_ty);
+    wzh_tx = wzh_pan.x;
+    wzh_ty = wzh_pan.y;
+    wzh_render(true);
+
+    // 双击判定：没移动过 + 距上次点击 < 300ms
+    if (wzh_moved) return;
+    var wzh_now = Date.now();
+    var wzh_px = wzh_t.clientX - wzh_rect.left;
+    var wzh_py = wzh_t.clientY - wzh_rect.top;
+    var wzh_near = Math.abs(wzh_t.clientX - wzh_lastTapX) < 40 && Math.abs(wzh_t.clientY - wzh_lastTapY) < 40;
+
+    if (wzh_now - wzh_lastTapTime < wzh_TAP_GAP && wzh_near) {
+      // 双击：2x 以上回到 1x 居中，否则以双击点为中心放大到 2x
+      if (wzh_scale > 1.2) {
+        wzh_setScaleAt(1, wzh_px, wzh_py);
+        wzh_tx = 0;
+        wzh_ty = 0;
+      } else {
+        wzh_setScaleAt(2, wzh_px, wzh_py);
+      }
+      wzh_render(true);
+      wzh_lastTapTime = 0;   // 重置，避免第三次点击被算成第二次双击
+      wzh_lastTapX = 0;
+      wzh_lastTapY = 0;
+    } else {
+      wzh_lastTapTime = wzh_now;
+      wzh_lastTapX = wzh_t.clientX;
+      wzh_lastTapY = wzh_t.clientY;
+    }
+  }, { passive: true });
+
+  // ===== 手势被系统打断：清基准并收敛 =====
+  wzh_viewer.addEventListener('touchcancel', function () {
+    wzh_mode = 'none';
+    wzh_pinchStartDist = 0;
+    var wzh_box = wzh_bounds(wzh_scale, wzh_tx, wzh_ty);
+    wzh_tx = wzh_box.x;
+    wzh_ty = wzh_box.y;
+    wzh_render(true);
+  }, { passive: true });
+
+  // ===== 横竖屏切换：保留倍率，重新收敛边界（状态不丢） =====
+  function wzh_reflow() {
+    var wzh_box = wzh_bounds(wzh_scale, wzh_tx, wzh_ty);
+    wzh_tx = wzh_box.x;
+    wzh_ty = wzh_box.y;
+    wzh_render(false);
+  }
+  window.addEventListener('resize', wzh_reflow);
+  window.addEventListener('orientationchange', function () {
+    setTimeout(wzh_reflow, 260); // 等浏览器完成旋转后的尺寸变化
+  });
+
+  // ===== 视频占位：文件不存在时显示录制说明，存在时直接播放器可用 =====
+  (function () {
+    var wzh_box = document.getElementById('wzhVideoBox');
+    var wzh_video = document.getElementById('wzhVideo');
+    if (!wzh_box || !wzh_video) return;
+
+    // 能读到元数据说明视频已就位，隐藏占位层
+    wzh_video.addEventListener('loadeddata', function () {
+      wzh_box.classList.add('wzh_has_video');
+    });
+    // 加载失败（文件还没放进来）时保持占位层
+    wzh_video.addEventListener('error', function () {
+      wzh_box.classList.remove('wzh_has_video');
+    });
+  })();
+
+  // 初始化
+  wzh_render(false);
+})();
+</script>
+</body>
+</html>
