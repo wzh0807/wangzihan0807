@@ -150,6 +150,7 @@
     position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:8px;
     padding:24px;text-align:center;color:#cbd5e1;font-size:12.8px;line-height:1.8;
+    pointer-events:none;
   }
   .wzh_video_ph strong{color:#fbbf24;font-size:13.5px}
   .wzh_video_ph .wzh_play{
@@ -204,7 +205,7 @@
 
   <!-- 手机实体演示视频：先留播放器占位 -->
   <section class="wzh_card">
-    <h2>手机实体演示视频<span class="wzh_tag">待上传</span></h2>
+    <h2>手机实体演示视频<span class="wzh_tag">已上传</span></h2>
     <div class="wzh_video_box" id="wzhVideoBox">
       <video id="wzhVideo" controls playsinline preload="metadata" webkit-playsinline
              src="./videos/task4-shake.mp4"></video>
@@ -432,7 +433,7 @@
     var wzh_video = document.getElementById('wzhVideo');
     if (!wzh_box || !wzh_video) return;
 
-    wzh_video.addEventListener('loadeddata', function () {
+    wzh_video.addEventListener('loadedmetadata', function () {
       wzh_box.classList.add('wzh_has_video');
     });
     wzh_video.addEventListener('error', function () {

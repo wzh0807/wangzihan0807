@@ -434,3 +434,9 @@ https://spontaneous-valkyrie-4e4229.netlify.app/mobile-events-lesson 在这里
 使用模型： DeepSeek-V4.1-Flash
 提示词内容：
 给任务三随机找一张图片放上去
+
+---
+[2026-11-18 10:38:00]
+使用模型： DeepSeek-V4.1-Flash
+提示词内容：
+把这两个视频分别添加进去
