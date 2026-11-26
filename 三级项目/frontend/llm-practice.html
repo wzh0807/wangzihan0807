@@ -9,44 +9,332 @@
            图片识别、语音识别；每次接口调用都写入操作痕迹面板并同步到控制台，Key 只存在于 backend/.env。
 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LLM 实践 | 王子涵 0807</title>
+<title>AI 聊天助手 · LLM 实践 | 王子涵 0807</title>
 <link rel="stylesheet" href="./css/style.css">
+<style>
+/* ===== 本页专属：深蓝全屏 Hero + 右侧对话窗口（参照课堂封面版式） ===== */
+body.wzh_llm_page {
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 520px at 18% 0%, rgba(56, 132, 255, .28), transparent 62%),
+    radial-gradient(760px 520px at 92% 12%, rgba(34, 211, 238, .16), transparent 60%),
+    radial-gradient(900px 600px at 50% 110%, rgba(37, 99, 235, .22), transparent 65%),
+    linear-gradient(160deg, #040a18 0%, #071733 48%, #051024 100%);
+  background-attachment: fixed;
+}
+body.wzh_llm_page::before {
+  content: "";
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(96, 165, 250, .05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, .05) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(circle at 50% 40%, #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 0%, transparent 78%);
+}
+body.wzh_llm_page .wzh_topbar { background: rgba(4, 10, 24, .72); border-bottom-color: rgba(96, 165, 250, .16); }
+body.wzh_llm_page .wzh_brand { color: #eaf2ff; letter-spacing: .12em; font-size: 13px; }
+body.wzh_llm_page .wzh_brand_dot { background: #38bdf8; box-shadow: 0 0 14px #38bdf8; }
+body.wzh_llm_page .wzh_nav a { font-size: 13px; }
+body.wzh_llm_page .wzh_nav a.wzh_active { background: linear-gradient(100deg, #2563eb, #38bdf8); color: #fff; }
+
+.wzh_llm_main { position: relative; z-index: 1; width: min(1240px, calc(100% - 44px)); margin: 0 auto; padding: 34px 0 56px; }
+
+.wzh_llm_hero {
+  display: grid; grid-template-columns: minmax(300px, .82fr) minmax(420px, 1.18fr);
+  gap: clamp(24px, 4vw, 52px); align-items: center;
+  min-height: calc(100vh - 150px); padding: 8px 0 26px;
+}
+.wzh_llm_hero > * { min-width: 0; }
+body.wzh_llm_page .wzh_nav { min-width: 0; }
+.wzh_llm_copy { max-width: 460px; }
+.wzh_llm_eyebrow {
+  display: inline-block; padding: 6px 18px; border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, .55);
+  color: #bae6fd; font-size: 11.5px; letter-spacing: .22em;
+}
+.wzh_llm_title {
+  margin: 20px 0 14px; font-size: clamp(38px, 5.2vw, 62px);
+  line-height: 1.12; letter-spacing: -.01em; color: #f4f9ff;
+}
+.wzh_llm_title em {
+  font-style: normal;
+  background: linear-gradient(100deg, #7dd3fc, #3b82f6 55%, #a5b4fc);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.wzh_llm_lead { color: #a9c1e3; font-size: 14.5px; line-height: 1.9; }
+.wzh_llm_state { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; align-items: center; }
+.wzh_state_pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  border: 1px solid rgba(74, 222, 128, .4);
+  background: rgba(22, 163, 74, .13); color: #bbf7d0; font-size: 12.5px;
+}
+.wzh_state_dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+.wzh_llm_state .wzh_badge { margin: 0; }
+.wzh_llm_model { margin-top: 14px; color: #8fb0d9; font-size: 12.5px; }
+.wzh_llm_model b { color: #dbeafe; font-weight: 600; }
+.wzh_llm_try { margin-top: 26px; }
+.wzh_llm_try h3 { margin: 0 0 10px; font-size: 12.5px; letter-spacing: .16em; color: #7fa6d4; font-weight: 600; }
+.wzh_try_list { display: grid; gap: 10px; }
+.wzh_try_item {
+  width: 100%; text-align: left; padding: 11px 16px; border-radius: 10px;
+  border: 1px solid rgba(96, 165, 250, .28); background: rgba(15, 35, 70, .55);
+  color: #cfe2fb; font-family: inherit; font-size: 13.5px; cursor: pointer;
+  transition: all .18s ease;
+}
+.wzh_try_item:hover { border-color: rgba(125, 211, 252, .7); background: rgba(37, 99, 235, .22); transform: translateX(3px); }
+
+/* ===== 右侧对话窗口 ===== */
+.wzh_chat_panel {
+  display: flex; flex-direction: column; min-height: 560px; max-height: 82vh; min-width: 0;
+  border-radius: 18px; border: 1px solid rgba(96, 165, 250, .38);
+  background: linear-gradient(160deg, rgba(13, 32, 66, .93), rgba(7, 18, 41, .96));
+  box-shadow: 0 24px 60px rgba(2, 8, 23, .65), inset 0 1px 0 rgba(148, 197, 255, .18);
+  backdrop-filter: blur(12px); overflow: hidden;
+}
+.wzh_chat_panel_head {
+  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap;
+  gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid rgba(96, 165, 250, .16);
+}
+.wzh_chat_panel_head .wzh_chip { white-space: normal; }
+.wzh_chat_panel_head h2 { margin: 0; font-size: 15.5px; color: #e8f2ff; }
+.wzh_chat_panel_head p { margin: 4px 0 0; font-size: 12px; color: #8fb0d9; }
+.wzh_panel_tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; padding: 10px 18px; border-bottom: 1px solid rgba(96, 165, 250, .12); }
+.wzh_tool_btn {
+  padding: 5px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;
+  border: 1px solid rgba(96, 165, 250, .32); background: rgba(30, 64, 120, .35);
+  color: #c7dcf7; font-family: inherit; transition: all .18s ease; text-decoration: none;
+}
+.wzh_tool_btn:hover { border-color: #7dd3fc; color: #fff; }
+.wzh_tool_btn.wzh_tool_primary { background: rgba(37, 99, 235, .55); border-color: rgba(125, 211, 252, .55); color: #eff6ff; }
+.wzh_provider_box { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #9db9dc; }
+.wzh_provider_box select {
+  padding: 4px 8px; border-radius: 8px; font-family: inherit; font-size: 12px;
+  color: #dbeafe; background: rgba(15, 35, 70, .9);
+  border: 1px solid rgba(96, 165, 250, .4); outline: none;
+}
+.wzh_llm_chat_box {
+  flex: 1; overflow-y: auto; padding: 18px;
+  display: flex; flex-direction: column; gap: 14px;
+  background: radial-gradient(600px 300px at 50% 0%, rgba(37, 99, 235, .16), transparent 70%);
+}
+.wzh_llm_chat_box .wzh_msg { display: flex; }
+.wzh_llm_chat_box .wzh_msg_user { justify-content: flex-end; }
+.wzh_llm_chat_box .wzh_msg_text {
+  max-width: 84%; padding: 11px 15px; border-radius: 12px;
+  font-size: 13.5px; line-height: 1.8; white-space: pre-wrap; word-break: break-word;
+}
+.wzh_llm_chat_box .wzh_msg_ai .wzh_msg_text {
+  color: #dbeafe; background: rgba(30, 58, 105, .62);
+  border: 1px solid rgba(96, 165, 250, .26); border-top-left-radius: 4px;
+}
+.wzh_llm_chat_box .wzh_msg_user .wzh_msg_text {
+  color: #fff; background: linear-gradient(100deg, #2563eb, #0ea5e9);
+  border-top-right-radius: 4px; box-shadow: 0 8px 22px rgba(37, 99, 235, .32);
+}
+.wzh_llm_chat_box .wzh_msg_loading .wzh_msg_text { color: #93c5fd; }
+.wzh_llm_chat_box .wzh_msg_err .wzh_msg_text { color: #fecaca; border-color: rgba(248, 113, 113, .45); background: rgba(127, 29, 29, .25); }
+.wzh_chat_panel_form { padding: 12px 16px 16px; border-top: 1px solid rgba(96, 165, 250, .16); background: rgba(4, 12, 28, .55); }
+.wzh_chat_panel_form textarea {
+  width: 100%; resize: none; padding: 11px 13px; border-radius: 10px;
+  background: rgba(8, 20, 42, .9); color: #e8f2ff; font-family: inherit; font-size: 13.5px;
+  border: 1px solid rgba(96, 165, 250, .3); outline: none;
+}
+.wzh_chat_panel_form textarea:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56, 189, 248, .12); }
+.wzh_panel_form_row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.wzh_char_count { font-size: 11.5px; color: #7fa6d4; }
+.wzh_send_btn {
+  padding: 8px 22px; border: none; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(100deg, #3b82f6, #38bdf8); color: #04121f;
+  font-family: inherit; font-size: 13.5px; font-weight: 700;
+}
+.wzh_send_btn:hover { filter: brightness(1.08); }
+
+/* ===== 下方：痕迹 + 四个功能卡 ===== */
+.wzh_llm_section_title { margin: 26px 0 14px; display: flex; align-items: baseline; gap: 12px; }
+.wzh_llm_section_title h2 { margin: 0; font-size: 18px; color: #e8f2ff; }
+.wzh_llm_section_title span { font-size: 12px; color: #7fa6d4; }
+.wzh_llm_card {
+  border-radius: 16px; border: 1px solid rgba(96, 165, 250, .24);
+  background: linear-gradient(160deg, rgba(12, 28, 58, .88), rgba(6, 16, 36, .92));
+  box-shadow: 0 14px 40px rgba(2, 8, 23, .45); padding: 18px 18px 16px;
+}
+.wzh_llm_head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.wzh_llm_head h2 { margin: 0; font-size: 15.5px; color: #e8f2ff; }
+.wzh_llm_head p { margin: 5px 0 0; font-size: 12.2px; color: #8fb0d9; line-height: 1.7; }
+.wzh_llm_no { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 6px; font-size: 11px; color: #7dd3fc; border: 1px solid rgba(125, 211, 252, .4); }
+.wzh_llm_card .wzh_badge { flex: none; }
+.wzh_llm_chat_box .wzh_msg_ai:first-child .wzh_msg_text { border-color: rgba(125, 211, 252, .45); }
+.wzh_trace_box {
+  max-height: 170px; overflow-y: auto; padding: 12px 14px; border-radius: 10px;
+  background: rgba(3, 10, 24, .8); border: 1px solid rgba(96, 165, 250, .18);
+  font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.9;
+}
+.wzh_trace_line { color: #9db9dc; }
+.wzh_trace_line.wzh_ok { color: #86efac; }
+.wzh_trace_line.wzh_err { color: #fca5a5; }
+.wzh_trace_time { color: #5f7fa8; margin-right: 6px; }
+.wzh_llm_grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 16px; }
+.wzh_llm_grid .wzh_llm_card:first-child { grid-column: 1 / -1; }
+.wzh_platform_row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.wzh_platform_row label { font-size: 12.5px; color: #8fb0d9; }
+.wzh_select {
+  padding: 7px 10px; border-radius: 8px; font-family: inherit; font-size: 13px;
+  color: #dbeafe; background: rgba(15, 35, 70, .9);
+  border: 1px solid rgba(96, 165, 250, .4); outline: none;
+}
+.wzh_chip {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11.5px;
+  color: #9db9dc; border: 1px solid rgba(96, 165, 250, .24); background: rgba(30, 64, 120, .22);
+}
+.wzh_chip b { color: #dbeafe; }
+.wzh_llm_actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.wzh_llm_card .wzh_btn, .wzh_llm_card .wzh_btn_ghost {
+  padding: 8px 16px; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  border: 1px solid transparent;
+}
+.wzh_llm_card .wzh_btn { background: linear-gradient(100deg, #3b82f6, #38bdf8); color: #04121f; }
+.wzh_llm_card .wzh_btn_ghost { background: transparent; color: #bae6fd; border-color: rgba(96, 165, 250, .4); }
+.wzh_file_btn {
+  display: inline-block; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; color: #bae6fd; border: 1px dashed rgba(125, 211, 252, .45);
+  background: rgba(30, 64, 120, .24); transition: all .18s ease;
+}
+.wzh_file_btn:hover { border-color: #7dd3fc; background: rgba(37, 99, 235, .24); }
+.wzh_file_btn input { display: none; }
+.wzh_chat_tip { font-size: 11.5px; color: #7fa6d4; }
+.wzh_kb_list { display: grid; gap: 8px; margin: 12px 0; }
+.wzh_kb_item {
+  display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px;
+  border-radius: 8px; background: rgba(30, 64, 120, .2); border: 1px solid rgba(96, 165, 250, .16);
+  font-size: 12.5px; color: #c7dcf7;
+}
+.wzh_match { padding: 8px 12px; margin-top: 8px; border-radius: 8px; font-size: 12px; color: #bae6fd; background: rgba(37, 99, 235, .16); }
+.wzh_llm_out {
+  margin-top: 10px; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.85;
+  color: #c7dcf7; background: rgba(3, 10, 24, .7); border: 1px solid rgba(96, 165, 250, .18);
+  white-space: pre-wrap; word-break: break-word;
+}
+.wzh_llm_out.wzh_ok { color: #bbf7d0; border-color: rgba(74, 222, 128, .4); background: rgba(6, 46, 30, .5); }
+.wzh_llm_out.wzh_err { color: #fecaca; border-color: rgba(248, 113, 113, .4); background: rgba(60, 12, 18, .5); }
+.wzh_preview { display: none; width: 100%; max-height: 260px; object-fit: contain; border-radius: 10px; margin-top: 10px; background: rgba(3, 10, 24, .6); }
+.wzh_preview.wzh_show { display: block; }
+.wzh_audio { width: 100%; margin-top: 12px; }
+.wzh_rec_dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f87171; margin-right: 6px; animation: wzh_blink 1s infinite; }
+@keyframes wzh_blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+.wzh_llm_card .wzh_field { display: grid; gap: 6px; margin-top: 10px; }
+.wzh_llm_card .wzh_field label { font-size: 12.5px; color: #8fb0d9; }
+.wzh_llm_card .wzh_chat_input {
+  width: 100%; padding: 10px 12px; border-radius: 10px; resize: vertical;
+  font-family: inherit; font-size: 13px; color: #e8f2ff; line-height: 1.7;
+  background: rgba(8, 20, 42, .9); border: 1px solid rgba(96, 165, 250, .3); outline: none;
+}
+.wzh_llm_card .wzh_chat_input:focus { border-color: #38bdf8; }
+.wzh_llm_card .wzh_empty { padding: 20px; text-align: center; color: #7fa6d4; font-size: 12.5px; border: 1px dashed rgba(96, 165, 250, .25); border-radius: 10px; }
+.wzh_llm_foot { margin-top: 30px; padding-top: 16px; border-top: 1px solid rgba(96, 165, 250, .16); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; color: #6f8fb8; }
+
+@media (max-width: 980px) {
+  .wzh_llm_hero { grid-template-columns: 1fr; min-height: auto; padding-top: 18px; }
+  .wzh_llm_copy { max-width: none; }
+  .wzh_chat_panel { min-height: 480px; max-height: none; }
+  .wzh_llm_grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  body.wzh_llm_page { overflow-x: hidden; }
+  body.wzh_llm_page .wzh_topbar { padding: 10px 14px; gap: 8px; }
+  body.wzh_llm_page .wzh_topbar .wzh_nav { width: 100%; gap: 6px; }
+  body.wzh_llm_page .wzh_topbar .wzh_nav a { padding: 4px 9px; font-size: 12px; }
+  .wzh_llm_main { width: calc(100% - 24px); padding-top: 18px; }
+  .wzh_llm_state { gap: 8px; }
+  .wzh_panel_tools { justify-content: flex-start; }
+  .wzh_chat_panel { min-height: 430px; }
+  .wzh_llm_chat_box { padding: 14px; }
+}
+</style>
 </head>
-<body>
+<body class="wzh_llm_page">
 
 <header class="wzh_topbar">
-  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>TECH NEWS</div>
   <nav class="wzh_nav">
     <a href="./index.html">首页</a>
-    <a href="./database.html">数据库连接</a>
-    <a href="./news.html">科技新闻</a>
+    <a href="./news.html">新闻列表</a>
     <a href="./gallery.html">图文列表</a>
+    <a href="./database.html">数据库连接</a>
     <a href="./ai-chat.html">AI 聊天</a>
+    <a href="#wzh_kb_section">知识库</a>
+    <a href="#wzh_vision_section">图像识别</a>
     <a class="wzh_active" href="./llm-practice.html">LLM 实践</a>
   </nav>
 </header>
 
-<main class="wzh_wrap">
-  <section class="wzh_hero">
-    <span class="wzh_eyebrow">LLM PRACTICE · 操作痕迹</span>
-    <h1>四类大模型能力<br><span>一次课全部跑通</span></h1>
-    <p class="wzh_lead">
-      平台热切换的 AI 客服、自己上传文件的知识库、图片识别、语音识别。
-      每个操作都会实时写入下方「操作痕迹」，方便现场演示时逐条核对。
-    </p>
-    <div class="wzh_meta_row">
-      <span class="wzh_chip">平台：<b>硅基流动 / 七牛</b></span>
-      <span class="wzh_chip">知识库：<b>txt / md</b></span>
-      <span class="wzh_chip">图像：<b>Qwen3-VL</b></span>
-      <span class="wzh_chip">语音：<b>SenseVoice</b></span>
+<main class="wzh_llm_main">
+
+  <section class="wzh_llm_hero">
+    <div class="wzh_llm_copy">
+      <span class="wzh_llm_eyebrow">MULTI-PROVIDER AI CHAT</span>
+      <h1 class="wzh_llm_title">AI 聊天<em>助手</em></h1>
+      <p class="wzh_lead wzh_llm_lead">
+        支持在硅基流动与七牛之间自由切换，可开启知识库问答；服务商配置由后端 <code>backend/.env</code> 读取，API Key 不会暴露给浏览器。
+      </p>
+      <div class="wzh_llm_state">
+        <span class="wzh_state_pill"><span class="wzh_state_dot"></span>已接入服务端 · Key 仅存于 .env</span>
+        <span class="wzh_badge wzh_off" id="wzh_provider_badge">读取中…</span>
+      </div>
+      <p class="wzh_llm_model">模型：<b id="wzh_chat_meta">读取中…</b></p>
+
+      <div class="wzh_llm_try">
+        <h3>试试提问</h3>
+        <div class="wzh_try_list">
+          <button class="wzh_try_item" type="button" data-wzh-fill="用一句话介绍人工智能">用一句话介绍人工智能</button>
+          <button class="wzh_try_item" type="button" data-wzh-fill="帮我写一个科技新闻标题">帮我写一个科技新闻标题</button>
+          <button class="wzh_try_item" type="button" data-wzh-fill="解释大语言模型是什么">解释大语言模型是什么</button>
+        </div>
+      </div>
     </div>
+
+    <section class="wzh_chat_panel" aria-label="对话窗口">
+      <div class="wzh_chat_panel_head">
+        <div>
+          <h2>对话窗口</h2>
+          <p>切换服务商后自动开启新对话</p>
+        </div>
+        <span class="wzh_chip">人设：课程客服「小智」</span>
+      </div>
+
+      <div class="wzh_panel_tools">
+        <a class="wzh_tool_btn" href="#wzh_kb_section">知识库问答</a>
+        <span class="wzh_provider_box">
+          服务商
+          <select id="wzh_provider" aria-label="选择服务商"></select>
+        </span>
+        <button class="wzh_tool_btn" id="wzh_llm_chat_clear" type="button">缺省对话</button>
+        <span class="wzh_chip">接口：<b>POST /api/chat</b></span>
+      </div>
+
+      <div class="wzh_llm_chat_box" id="wzh_llm_chat_box" aria-live="polite"></div>
+
+      <form class="wzh_chat_panel_form" id="wzh_llm_chat_form">
+        <textarea id="wzh_llm_chat_input" rows="2" maxlength="200"
+          placeholder="输入你想问的问题…"></textarea>
+        <div class="wzh_panel_form_row">
+          <span class="wzh_char_count"><span id="wzh_char_now">0</span>/200 · Enter 发送，Shift + Enter 换行</span>
+          <button class="wzh_send_btn" id="wzh_llm_chat_btn" type="submit">发送</button>
+        </div>
+      </form>
+    </section>
   </section>
 
+  <div class="wzh_llm_section_title">
+    <h2>实践操作痕迹</h2>
+    <span>接口调用、平台切换、识别结果按时间记录，并同步输出到浏览器控制台</span>
+  </div>
   <section class="wzh_llm_card">
     <div class="wzh_llm_head">
       <div>
-        <h2><span class="wzh_llm_no">00 / 痕迹</span>实践操作痕迹</h2>
-        <p>接口调用、平台切换、识别结果都会按时间记录在这里，同时输出到浏览器控制台。</p>
+        <h2><span class="wzh_llm_no">00 / 痕迹</span>操作痕迹面板</h2>
+        <p>现场演示时逐条核对：谁在什么时间调了哪个接口、返回是否成功。</p>
       </div>
       <button class="wzh_btn_ghost" id="wzh_trace_clear" type="button">清空痕迹</button>
     </div>
@@ -55,42 +343,18 @@
     </div>
   </section>
 
+  <div class="wzh_llm_section_title">
+    <h2>另外三项能力</h2>
+    <span>知识库 / 图像识别 / 语音识别，同样会写进上面的痕迹面板</span>
+  </div>
+
   <div class="wzh_llm_grid">
 
-    <section class="wzh_llm_card">
+    <section class="wzh_llm_card" id="wzh_kb_section">
       <div class="wzh_llm_head">
         <div>
-          <h2><span class="wzh_llm_no">01 / AI 客服</span>双平台热切换</h2>
-          <p>前端下拉框选择平台，后端按 provider 读取 .env 中对应平台的地址、Key 与模型；切换后对话照常继续。</p>
-        </div>
-        <span class="wzh_badge wzh_off" id="wzh_provider_badge">读取中…</span>
-      </div>
-
-      <div class="wzh_platform_row">
-        <label for="wzh_provider">当前平台</label>
-        <select class="wzh_select" id="wzh_provider"></select>
-        <span class="wzh_chip">接口：<b>POST /api/chat</b></span>
-        <span class="wzh_chip" id="wzh_chat_meta">模型读取中…</span>
-      </div>
-
-      <div class="wzh_llm_chat_box" id="wzh_llm_chat_box" aria-live="polite"></div>
-
-      <form id="wzh_llm_chat_form">
-        <textarea class="wzh_chat_input" id="wzh_llm_chat_input" rows="2"
-          placeholder="向 AI 客服提问，Enter 发送，Shift + Enter 换行"></textarea>
-        <div class="wzh_llm_actions">
-          <button class="wzh_btn" id="wzh_llm_chat_btn" type="submit">发送</button>
-          <button class="wzh_btn_ghost" id="wzh_llm_chat_clear" type="button">清空对话</button>
-          <span class="wzh_chat_tip">人设：课程 AI 客服「小智」</span>
-        </div>
-      </form>
-    </section>
-
-    <section class="wzh_llm_card">
-      <div class="wzh_llm_head">
-        <div>
-          <h2><span class="wzh_llm_no">02 / 知识库</span>上传文件 + 检索问答</h2>
-          <p>自己上传 txt / md 文件，后端按约 400 字切块存入 data/wzh_kb.json；提问时先关键词检索，再把命中片段交给大模型作答。</p>
+          <h2><span class="wzh_llm_no">01 / 知识库</span>上传文件 + 检索问答</h2>
+          <p>上传 txt / md 文件，后端按约 400 字切块存入 data/wzh_kb.json；提问时先关键词检索，再把命中片段交给大模型作答。</p>
         </div>
         <span class="wzh_badge" id="wzh_kb_badge">0 个文件</span>
       </div>
@@ -120,10 +384,10 @@
       <div id="wzh_kb_matched"></div>
     </section>
 
-    <section class="wzh_llm_card">
+    <section class="wzh_llm_card" id="wzh_vision_section">
       <div class="wzh_llm_head">
         <div>
-          <h2><span class="wzh_llm_no">03 / 图像识别</span>上传图片测试</h2>
+          <h2><span class="wzh_llm_no">02 / 图像识别</span>上传图片测试</h2>
           <p>图片转成 Base64 交给硅基流动视觉模型（Qwen3-VL），由后端 POST /api/vision 转发。</p>
         </div>
         <span class="wzh_badge" id="wzh_vision_badge">等待图片</span>
@@ -152,10 +416,10 @@
       <div class="wzh_llm_out" id="wzh_vision_out">尚未识别。</div>
     </section>
 
-    <section class="wzh_llm_card">
+    <section class="wzh_llm_card" id="wzh_asr_section">
       <div class="wzh_llm_head">
         <div>
-          <h2><span class="wzh_llm_no">04 / 语音识别</span>录音或上传音频</h2>
+          <h2><span class="wzh_llm_no">03 / 语音识别</span>录音或上传音频</h2>
           <p>浏览器录音后转成 WAV，Base64 提交后端 POST /api/asr，再以 multipart 调用硅基流动 SenseVoice 识别成文字。</p>
         </div>
         <span class="wzh_badge" id="wzh_asr_badge">待录音</span>
@@ -177,12 +441,35 @@
 
   </div>
 
-  <footer class="wzh_foot">
+  <footer class="wzh_llm_foot">
     <span>王子涵 · 0807 · 高级网页设计</span>
     <span>接口：/api/chat · /api/kb/* · /api/vision · /api/asr</span>
   </footer>
 </main>
 
 <script src="./js/wzh_llmpractice.js"></script>
+<script>
+/**
+ * 功能名称：wzh_initPageExtras
+ * 功能简介：绑定「试试提问」快捷填充与输入字数统计；点击建议问题会把文案写入对话框并聚焦，
+ *           输入时更新 0/200 计数。只操作 DOM，不发请求。
+ */
+(function wzh_initPageExtras() {
+    var wzh_input = document.getElementById('wzh_llm_chat_input');
+    var wzh_now = document.getElementById('wzh_char_now');
+
+    document.querySelectorAll('[data-wzh-fill]').forEach(function (wzh_btn) {
+        wzh_btn.addEventListener('click', function () {
+            wzh_input.value = wzh_btn.getAttribute('data-wzh-fill');
+            wzh_input.focus();
+            wzh_input.dispatchEvent(new Event('input'));
+        });
+    });
+
+    wzh_input.addEventListener('input', function () {
+        wzh_now.textContent = String(wzh_input.value.length);
+    });
+})();
+</script>
 </body>
 </html>

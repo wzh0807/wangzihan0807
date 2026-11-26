@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<!--
+  作者：王子涵
+  建立时间：2026-11-26
+  使用模型：DeepSeek-V4.1-Flash
+  功能名称：Supabase 项目创建与 MCP 接入课堂跟做
+  功能简介：把课程 Supabase 跟做案例做成可分享的静态页面，包含建项目要点、MCP 配置生成器、建表提示词、常见坑与验收清单，并提供一个前端调 Supabase REST 的演示区（未填配置时自动使用演示数据）。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Supabase 项目创建与 MCP 接入 · 王子涵 0807">
+    <title>Supabase 项目创建与 MCP 接入 | 王子涵 0807</title>
+    <style>
+        :root {
+            --wzh_ink: #15241f;
+            --wzh_muted: #5c6b66;
+            --wzh_paper: #f4f7f6;
+            --wzh_card: #ffffff;
+            --wzh_line: #dfe9e5;
+            --wzh_green: #1f9d6b;
+            --wzh_green_soft: #eaf9f1;
+            --wzh_orange: #d98324;
+            --wzh_red: #d64545;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            color: var(--wzh_ink);
+            background:
+                radial-gradient(circle at 8% 3%, rgba(62, 207, 142, .13) 0, transparent 30%),
+                radial-gradient(circle at 95% 97%, rgba(31, 157, 107, .10) 0, transparent 28%),
+                var(--wzh_paper);
+            font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+            line-height: 1.8;
+        }
+        .wzh_page { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 64px; }
+        .wzh_back { display: inline-block; margin-bottom: 20px; padding: 5px 16px; border-radius: 999px; color: #12724f; background: #fff; border: 1px solid #cfe8dd; font-size: .86rem; text-decoration: none; }
+        .wzh_back:hover { background: #eefaf4; }
+        .wzh_head { text-align: center; padding: 6px 6px 24px; }
+        .wzh_tag { display: inline-block; padding: 4px 16px; border-radius: 999px; font-size: .72rem; letter-spacing: 3px; color: #12724f; background: #fff; border: 1.5px solid #c9e9dc; margin-bottom: 14px; }
+        h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.3rem); line-height: 1.35; }
+        h1 b { color: var(--wzh_green); }
+        .wzh_sub { margin: 12px auto 0; max-width: 690px; color: var(--wzh_muted); font-size: .93rem; }
+        .wzh_card { margin-bottom: 20px; padding: 22px 24px; background: var(--wzh_card); border: 1px solid var(--wzh_line); border-radius: 14px; box-shadow: 0 6px 20px rgba(21, 36, 31, .05); }
+        h2 { margin: 0 0 12px; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        h2 .wzh_no { flex: none; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--wzh_green); color: #fff; font-size: .78rem; }
+        h2 small { margin-left: auto; font-weight: 400; color: #94a49e; font-size: .76rem; }
+        p { margin: 0 0 10px; font-size: .93rem; }
+        ul, ol { margin: 0 0 10px; padding-left: 22px; font-size: .93rem; }
+        li { margin-bottom: 5px; }
+        code { padding: 1px 6px; border-radius: 5px; background: #edf7f2; color: #0f6b47; font-family: Consolas, monospace; font-size: .86em; }
+        .wzh_note { margin: 12px 0; padding: 10px 15px; border-left: 4px solid var(--wzh_green); border-radius: 0 10px 10px 0; background: #f1fbf6; font-size: .88rem; }
+        .wzh_note.wzh_warn { border-left-color: var(--wzh_orange); background: #fffaf2; color: #7a4c08; }
+        .wzh_note.wzh_bad { border-left-color: var(--wzh_red); background: #fff5f5; color: #8a2b2b; }
+        .wzh_table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .86rem; }
+        .wzh_table th, .wzh_table td { padding: 9px 11px; border: 1px solid var(--wzh_line); text-align: left; vertical-align: top; }
+        .wzh_table th { background: #f3fbf7; color: #12724f; font-weight: 700; }
+        .wzh_flow { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; font-size: .84rem; }
+        .wzh_flow span { padding: 5px 12px; border-radius: 999px; background: var(--wzh_green_soft); color: #12724f; border: 1px solid #cfe8dd; }
+        .wzh_code_wrap { position: relative; margin: 10px 0; }
+        .wzh_code { margin: 0; padding: 16px 14px; background: #0f1f1a; color: #d7f5e7; border-radius: 10px; overflow-x: auto; font-family: Consolas, monospace; font-size: .8rem; line-height: 1.7; white-space: pre; }
+        .wzh_copy { position: absolute; top: 8px; right: 8px; padding: 3px 12px; border: 0; border-radius: 6px; background: #3ecf8e; color: #06231a; font-size: .74rem; font-weight: 700; cursor: pointer; }
+        .wzh_copy:hover { background: #6ee7b7; }
+        .wzh_field { display: grid; gap: 6px; margin-bottom: 12px; font-size: .86rem; color: var(--wzh_muted); }
+        .wzh_field input { padding: 9px 12px; border: 1px solid var(--wzh_line); border-radius: 8px; font-family: Consolas, monospace; font-size: .84rem; color: var(--wzh_ink); outline: none; }
+        .wzh_field input:focus { border-color: var(--wzh_green); }
+        .wzh_btns { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 12px; }
+        .wzh_btn { padding: 9px 18px; border: 0; border-radius: 8px; background: var(--wzh_green); color: #fff; font-size: .88rem; font-weight: 700; cursor: pointer; }
+        .wzh_btn:hover { background: #17815a; }
+        .wzh_btn.wzh_ghost { background: #fff; color: #12724f; border: 1px solid #cfe8dd; font-weight: 400; }
+        .wzh_btn:disabled { opacity: .55; cursor: not-allowed; }
+        .wzh_status { margin: 4px 0 12px; font-size: .85rem; color: var(--wzh_muted); }
+        .wzh_status b { color: var(--wzh_ink); }
+        .wzh_cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+        .wzh_row_card { padding: 13px 15px; border: 1px solid var(--wzh_line); border-radius: 10px; background: #fbfefc; font-size: .84rem; }
+        .wzh_row_card h3 { margin: 0 0 6px; font-size: .95rem; }
+        .wzh_row_card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; }
+        .wzh_row_card dt { color: #94a49e; }
+        .wzh_row_card dd { margin: 0; color: #2d4038; word-break: break-word; }
+        .wzh_check { margin: 6px 0 0; padding-left: 0; list-style: none; }
+        .wzh_check li { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; }
+        .wzh_check input { margin-top: 6px; accent-color: var(--wzh_green); }
+        .wzh_tasks { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-top: 8px; }
+        .wzh_task { padding: 14px 16px; border: 1px solid var(--wzh_line); border-radius: 10px; background: #fbfefc; font-size: .86rem; }
+        .wzh_task b { display: block; margin-bottom: 4px; color: #12724f; }
+        .wzh_foot { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--wzh_line); font-size: .78rem; color: #94a49e; text-align: center; }
+        @media (max-width: 640px) {
+            .wzh_page { width: calc(100% - 20px); padding: 20px 0 48px; }
+            .wzh_card { padding: 16px; }
+            .wzh_table { font-size: .78rem; }
+            .wzh_table th, .wzh_table td { padding: 7px 8px; }
+            h2 small { display: none; }
+        }
+    </style>
+</head>
+<body>
+<main class="wzh_page">
+    <a class="wzh_back" href="../index.html">← 返回课堂实践中心</a>
+
+    <header class="wzh_head">
+        <span class="wzh_tag">S U P A B A S E · M C P</span>
+        <h1>建好一个云端数据库<br><b>再让 AI 直接替你建表</b></h1>
+        <p class="wzh_sub">
+            传统流程是「装数据库 → 写 SQL → 建表 → 写接口」。这节课换个玩法：在 Supabase 建一个空项目，
+            把它的 MCP 地址接进 Trae，之后建表、插数据、开权限，全都用一句话让 AI 去做。
+        </p>
+        <div class="wzh_flow">
+            <span>网页建空项目</span><span>→</span><span>MCP 接进 Trae</span><span>→</span><span>一句话让 AI 建表</span><span>→</span><span>前端调 REST 取数</span>
+        </div>
+    </header>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">0</span>先弄懂三个名词<small>一张表看懂谁干什么</small></h2>
+        <table class="wzh_table">
+            <thead><tr><th>层次</th><th>是什么</th><th>谁来干</th></tr></thead>
+            <tbody>
+                <tr><td>Supabase 控制台</td><td>网页端：SQL Editor、表编辑器、API Keys</td><td>建项目时用一下，之后基本不用</td></tr>
+                <tr><td>MCP</td><td>让 AI 能「远程操作」Supabase 的协议，一个项目一个专属 URL</td><td>装一次，长期有效</td></tr>
+                <tr><td>Agent Skills（可选）</td><td>教 AI「Supabase 该怎么用」的知识包</td><td>装一次，AI 建表更规范</td></tr>
+            </tbody>
+        </table>
+        <div class="wzh_note"><b>一句话记住：</b>别再自己写 SQL 建表了，把 Supabase 的 MCP 地址喂给 AI，让 AI 直接在你账号里建库建表。</div>
+    </section>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">1</span>开工前确认三件事<small>少一件都会卡住</small></h2>
+        <ol>
+            <li><b>有 Supabase 账号</b>：打开 <code>https://supabase.com</code>，右上角 Sign in，GitHub 或邮箱登录均可。</li>
+            <li><b>有支持 MCP 的 AI 编程工具</b>：本课用 Trae（CodeBuddy 也可以），MCP 在「插件市场 → MCP」里管理。</li>
+            <li><b>知道免费版两条硬限制</b>：一个组织最多 2 个免费项目；项目 7 天不活跃会被自动暂停。</li>
+        </ol>
+        <div class="wzh_note wzh_warn"><b>答辩前一天</b>务必去 Dashboard 看一眼项目是否还在线。显示 Paused 就点恢复，等一分钟即可。</div>
+    </section>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">2</span>创建一个 Supabase 项目<small>约 3 分钟</small></h2>
+        <p>登录后进入 Dashboard，点左上角组织名旁的 <b>New project</b>，或直接访问 <code>supabase.com/dashboard/new</code>。</p>
+        <table class="wzh_table">
+            <thead><tr><th>字段</th><th>怎么填</th><th>说明</th></tr></thead>
+            <tbody>
+                <tr><td>Organization</td><td>选自己的组织（标注 FREE）</td><td>没有就新建一个</td></tr>
+                <tr><td>GitHub (optional)</td><td>跳过</td><td>课程项目用不上</td></tr>
+                <tr><td>Project name</td><td>英文，如 <code>wzh-project</code></td><td>避免中文在 URL / 命令里出问题</td></tr>
+                <tr><td>Database password</td><td>点 Generate a password，立刻复制保存</td><td>只显示一次，丢失只能重置</td></tr>
+                <tr><td>Region</td><td>选 Auto</td><td>建完不能改</td></tr>
+                <tr><td>Data access</td><td>勾 Enable Data API 与自动授权，不勾 RLS</td><td>课程先用服务端 Key 访问</td></tr>
+            </tbody>
+        </table>
+        <p>等 1–2 分钟状态变成 <b>Healthy</b> 后，记下三个值：</p>
+        <table class="wzh_table">
+            <thead><tr><th>要记的东西</th><th>长什么样</th><th>后面用在哪</th></tr></thead>
+            <tbody>
+                <tr><td>Project URL</td><td><code>https://xxxx.supabase.co</code></td><td>前端调 REST 接口</td></tr>
+                <tr><td>project-ref</td><td>URL 里那串小写字母</td><td>拼 MCP 地址</td></tr>
+                <tr><td>数据库密码</td><td>上一步保存的那串</td><td>连接数据库、重置时用</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">3</span>生成自己的 MCP 配置<small>一人一个，不能照抄</small></h2>
+        <p>项目首页往下滚，点 <b>Get connected → MCP</b>（或顶部 Connect 按钮切到 MCP 页签），复制配置里的 project_ref。下面填进去即可生成 Trae 用的 JSON：</p>
+        <div class="wzh_field">
+            <label for="wzh_mcp_ref">project_ref（URL 里那串小写字母）</label>
+            <input id="wzh_mcp_ref" placeholder="例如：abcdefghijklmnop" autocomplete="off">
+        </div>
+        <div class="wzh_code_wrap">
+            <pre class="wzh_code" id="wzh_mcp_code">{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=你的project_ref"
+    }
+  }
+}</pre>
+            <button class="wzh_copy" id="wzh_mcp_copy" type="button">复制</button>
+        </div>
+        <div class="wzh_note wzh_warn">
+            <b>键名别搞错：</b>Supabase 网页给的是 <code>"servers"</code>，Trae 项目级 <code>.trae/mcp.json</code> 用的是 <code>"mcpServers"</code>。
+            粘完发现列表里没有 supabase，先回来检查这个键名。
+        </div>
+    </section>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">4</span>在 Trae 里装好 MCP 并授权<small>多数人卡在授权这一步</small></h2>
+        <ol>
+            <li>打开 Trae「设置 → MCP」（在「插件市场」下面），确认顶部「启用项目级 MCP」已打开，这样才会读取 <code>.trae/mcp.json</code>。</li>
+            <li>把第 3 节生成的 JSON 交给 AI 写入 <code>.trae/mcp.json</code>，或在「插件市场 → MCP → + 添加 → 手动配置」里粘贴。</li>
+            <li>列表里出现 supabase 且带 <b>⚠ 前往验证</b>，点它跳到 Supabase 授权页。</li>
+            <li>确认标题是 <b>Authorize Trae</b>、组织是你自己的、权限包含 Database 等，再点绿色 <b>Authorize</b>。</li>
+        </ol>
+        <div class="wzh_note wzh_warn"><b>别在终端里裸跑</b> <code>npx skills add supabase/agent-skills</code>，那样会装到全局；给 Trae 用要加参数：
+            <code>npx skills add supabase/agent-skills --agent trae</code>。</div>
+        <div class="wzh_note">授权走 OAuth：不需要手动生成 Access Token，也不需要把数据库密码给 AI；授权一次长期有效。</div>
+    </section>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">5</span>接好之后怎么用：说需求就行<small>建表交给 AI</small></h2>
+        <p>把下面这段发给 Trae（把主题换成你的作业主题），AI 会通过 MCP 在你的项目里执行 SQL：</p>
+        <div class="wzh_code_wrap">
+            <pre class="wzh_code" id="wzh_prompt_code">用 supabase 帮我建一个「高级网页设计课堂实践」的数据库：
+1. 建 3 张有关联的表，字段和类型你定，表名用英文小写并以 wzh_ 开头
+2. 给每张表开启 RLS，并加一条「允许匿名读取」的策略，写入只允许 service_role
+3. 每张表插入 8 条中文模拟数据（贴合作业主题）
+4. 建完把表结构、字段说明和对应的 REST 接口路径整理给我，前端要用</pre>
+            <button class="wzh_copy" id="wzh_prompt_copy" type="button">复制</button>
+        </div>
+        <p>验证 MCP 是否真通了，就问一句：</p>
+        <div class="wzh_code_wrap">
+            <pre class="wzh_code" id="wzh_verify_code">查一下我 Supabase 项目里现在有哪些表，把表名和字段列出来</pre>
+            <button class="wzh_copy" id="wzh_verify_copy" type="button">复制</button>
+        </div>
+        <div class="wzh_note">接口是自动生成的：建完表就能用 <code>https://xxxx.supabase.co/rest/v1/表名</code> 取数（请求头带 apikey）。</div>
+    </section>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">6</span>常见坑速查<small>出问题先看这张表</small></h2>
+        <table class="wzh_table">
+            <thead><tr><th>现象</th><th>原因</th><th>处理</th></tr></thead>
+            <tbody>
+                <tr><td>只能建 1–2 个项目</td><td>免费版：一个组织 2 个</td><td>删旧项目或换组织</td></tr>
+                <tr><td>接口 404 / 超时</td><td>免费项目 7 天不活跃被暂停</td><td>登录 Dashboard 点恢复</td></tr>
+                <tr><td>MCP 一直 ⚠ 重试</td><td>还没做 OAuth 授权</td><td>点重试 → Authorize</td></tr>
+                <tr><td>连上了别人的库</td><td>project_ref 不对</td><td>回自己项目重新复制</td></tr>
+                <tr><td>前端返回空数组</td><td>开了 RLS 但没写策略</td><td>加 select 策略，或走 service_role（仅服务端）</td></tr>
+                <tr><td>连接串认证失败</td><td>密码特殊字符未转义</td><td>用转义后的密码或重置</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">7</span>验收清单与课堂任务<small>能跑 + 能讲清</small></h2>
+        <ul class="wzh_check">
+            <li><input type="checkbox"> Supabase 项目状态是 Healthy</li>
+            <li><input type="checkbox"> 数据库密码、Project URL、project-ref 已记录</li>
+            <li><input type="checkbox"> MCP 地址里是自己的 project_ref</li>
+            <li><input type="checkbox"> Trae 的 MCP 列表里 supabase 是绿色对勾</li>
+            <li><input type="checkbox"> Supabase 后台已点过 Authorize</li>
+            <li><input type="checkbox"> 问 AI「我有哪些表」能返回真实结果</li>
+            <li><input type="checkbox"> Table Editor 能看到表，REST 接口能返回数据</li>
+        </ul>
+        <div class="wzh_tasks">
+            <div class="wzh_task"><b>⭐ 任务一 · 跑通最小闭环</b>建空项目 → 拿 MCP 地址 → 接入 Trae 并授权；问「我有哪些表」能返回结果即完成，截图存证。</div>
+            <div class="wzh_task"><b>⭐⭐ 任务二 · 让 AI 建三张表</b>围绕作业主题建 3 张有关联的表，每表 8 条中文数据，开 RLS 并给匿名只读策略；截图 Table Editor，整理 3 条 REST 地址。</div>
+            <div class="wzh_task"><b>⭐⭐⭐ 任务三 · 前端取数 + 答辩</b>用 fetch 调 REST 把数据渲染成卡片列表；准备三个答辩问题。</div>
+        </div>
+        <div class="wzh_note wzh_bad">提交前把敏感信息打码：数据库密码、完整 project-ref、带 apikey 的请求头、授权页里的账号名，一律改成 <code>XXXX</code>。</div>
+    </section>
+
+    <section class="wzh_card">
+        <h2><span class="wzh_no">8</span>任务三演示：前端直接调 REST<small>已预填课程项目</small></h2>
+        <p>课程项目已建好三张表（<code>wzh_students</code> / <code>wzh_projects</code> / <code>wzh_records</code>），页面打开会用原生 <code>fetch</code> 请求 <code>/rest/v1/表名</code> 并渲染成卡片；接口失败时可点「用演示数据」兜底。</p>
+        <div class="wzh_field">
+            <label for="wzh_sb_url">Project URL</label>
+            <input id="wzh_sb_url" value="https://uwwujvgqkfnnizdqaqyy.supabase.co" placeholder="https://xxxx.supabase.co" autocomplete="off">
+        </div>
+        <div class="wzh_field">
+            <label for="wzh_sb_key">anon key（publishable key，可公开在前端使用）</label>
+            <input id="wzh_sb_key" value="sb_publishable_ijm8cERgj7ry4Bv0E-cJbw_ExzEz0vf" placeholder="eyJhbGciOiJIUzI1NiIs..." autocomplete="off">
+        </div>
+        <div class="wzh_field">
+            <label for="wzh_sb_table">表名</label>
+            <input id="wzh_sb_table" value="wzh_projects" autocomplete="off">
+        </div>
+        <div class="wzh_btns">
+            <button class="wzh_btn" id="wzh_sb_load" type="button">读取数据</button>
+            <button class="wzh_btn wzh_ghost" id="wzh_sb_demo" type="button">用演示数据</button>
+            <button class="wzh_btn wzh_ghost" id="wzh_sb_clear" type="button">清除本地配置</button>
+        </div>
+        <p class="wzh_status" id="wzh_sb_status">尚未读取数据。</p>
+        <div class="wzh_cards" id="wzh_sb_cards"></div>
+        <div class="wzh_note wzh_warn">页面预填的是课程项目的 publishable key，只有匿名 select 权限，可以公开在前端；不要换成 service_role key。</div>
+    </section>
+
+    <footer class="wzh_foot">
+        王子涵 · 0807 · 高级网页设计 2026-2027-1 · 参考课程案例「Supabase 项目创建与 MCP 接入」整理
+    </footer>
+</main>
+
+<script>
+(function () {
+    'use strict';
+
+    var wzh_REF_DEFAULT = '你的project_ref';
+    var wzh_STORE_KEY = 'wzh_supabase_config';
+
+    /**
+     * 功能名称：wzh_escape
+     * 功能简介：把表格与接口返回里的 & < > " 转义，避免破坏页面结构。
+     */
+    function wzh_escape(wzh_str) {
+        return String(wzh_str == null ? '' : wzh_str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /**
+     * 功能名称：wzh_copyText
+     * 功能简介：把指定元素的文本复制到剪贴板，并短暂把按钮文字改成「已复制」作为反馈。
+     */
+    function wzh_copyText(wzh_targetId, wzh_btn) {
+        var wzh_el = document.getElementById(wzh_targetId);
+        if (!wzh_el) {
+            return;
+        }
+        var wzh_text = wzh_el.textContent;
+        var wzh_done = function () {
+            var wzh_old = wzh_btn.textContent;
+            wzh_btn.textContent = '已复制';
+            setTimeout(function () { wzh_btn.textContent = wzh_old; }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(wzh_text).then(wzh_done, function () {
+                window.prompt('请手动复制：', wzh_text);
+            });
+        } else {
+            window.prompt('请手动复制：', wzh_text);
+        }
+    }
+
+    /**
+     * 功能名称：wzh_buildMcp
+     * 功能简介：读取输入框里的 project_ref，生成 Trae 项目级 .trae/mcp.json 的 JSON 文本；
+     *           为空时用占位符，避免拼出错误地址。
+     */
+    function wzh_buildMcp() {
+        var wzh_ref = document.getElementById('wzh_mcp_ref').value.trim() || wzh_REF_DEFAULT;
+        var wzh_json = {
+            mcpServers: {
+                supabase: {
+                    url: 'https://mcp.supabase.com/mcp?project_ref=' + wzh_ref
+                }
+            }
+        };
+        document.getElementById('wzh_mcp_code').textContent = JSON.stringify(wzh_json, null, 2);
+        console.log('[supabase] 生成 MCP 配置：', wzh_json);
+    }
+
+    /**
+     * 功能名称：wzh_demoRows
+     * 功能简介：返回 8 条课程主题演示数据，在没有 Supabase 配置时用于展示卡片渲染效果。
+     */
+    function wzh_demoRows() {
+        return [
+            { id: 1, title: 'HTML 基础', category: '基础', summary: '标题、段落、列表、表格与超链接练习', updated_at: '2026-09-18' },
+            { id: 2, title: 'CSS 盒模型', category: '样式', summary: '层叠与继承、margin 与 padding 对比', updated_at: '2026-09-25' },
+            { id: 3, title: '新闻选项卡', category: '交互', summary: '事件委托实现国内 / 省内 / 国际切换', updated_at: '2026-10-16' },
+            { id: 4, title: '移动端四任务', category: '移动端', summary: '触摸事件、滑动卡片、双指缩放、摇一摇', updated_at: '2026-10-30' },
+            { id: 5, title: '全栈项目初始化', category: '全栈', summary: 'Express 8807 + MySQL 5.7 + 原生前端', updated_at: '2026-11-23' },
+            { id: 6, title: 'AI 聊天', category: '大模型', summary: '后端代理硅基流动接口，前端多轮对话', updated_at: '2026-11-23' },
+            { id: 7, title: 'LLM 实践', category: '大模型', summary: '双平台客服、知识库、图像与语音识别', updated_at: '2026-11-26' },
+            { id: 8, title: 'Supabase 与 MCP', category: '云数据库', summary: '云端建库、AI 建表、REST 取数', updated_at: '2026-11-26' }
+        ];
+    }
+
+    /**
+     * 功能名称：wzh_renderRows
+     * 功能简介：把数据数组渲染成卡片网格；字段名做转义，值为对象时转成 JSON 字符串。
+     */
+    function wzh_renderRows(wzh_rows, wzh_isDemo) {
+        var wzh_box = document.getElementById('wzh_sb_cards');
+        wzh_box.innerHTML = '';
+
+        if (!Array.isArray(wzh_rows) || !wzh_rows.length) {
+            wzh_box.innerHTML = '<p class="wzh_status">返回空数组：检查表名是否正确，或 RLS 是否缺少 select 策略。</p>';
+            return;
+        }
+
+        wzh_rows.forEach(function (wzh_row) {
+            var wzh_keys = Object.keys(wzh_row);
+            var wzh_titleKey = wzh_keys.indexOf('title') >= 0 ? 'title'
+                : wzh_keys.indexOf('name') >= 0 ? 'name' : wzh_keys[0];
+            var wzh_card = document.createElement('article');
+            wzh_card.className = 'wzh_row_card';
+            var wzh_html = '<h3>' + wzh_escape(wzh_row[wzh_titleKey]) + '</h3><dl>';
+
+            wzh_keys.forEach(function (wzh_k) {
+                if (wzh_k === wzh_titleKey) {
+                    return;
+                }
+                var wzh_v = wzh_row[wzh_k];
+                if (wzh_v !== null && typeof wzh_v === 'object') {
+                    wzh_v = JSON.stringify(wzh_v);
+                }
+                wzh_html += '<dt>' + wzh_escape(wzh_k) + '</dt><dd>' + wzh_escape(wzh_v) + '</dd>';
+            });
+
+            wzh_card.innerHTML = wzh_html + '</dl>';
+            wzh_box.appendChild(wzh_card);
+        });
+
+        console.log('[supabase] 渲染数据：', (wzh_isDemo ? '演示数据 ' : '接口数据 ') + wzh_rows.length + ' 条');
+    }
+
+    /**
+     * 功能名称：wzh_setStatus
+     * 功能简介：更新演示区状态文字，isError 为真时标红。
+     */
+    function wzh_setStatus(wzh_text, wzh_isError) {
+        var wzh_el = document.getElementById('wzh_sb_status');
+        wzh_el.innerHTML = wzh_isError ? '<b style="color:#d64545">' + wzh_escape(wzh_text) + '</b>' : wzh_escape(wzh_text);
+    }
+
+    /**
+     * 功能名称：wzh_saveConfig
+     * 功能简介：把 URL、key、表名存进 localStorage，刷新页面后仍可复用（仅本机浏览器）。
+     */
+    function wzh_saveConfig() {
+        try {
+            localStorage.setItem(wzh_STORE_KEY, JSON.stringify({
+                url: document.getElementById('wzh_sb_url').value.trim(),
+                key: document.getElementById('wzh_sb_key').value.trim(),
+                table: document.getElementById('wzh_sb_table').value.trim()
+            }));
+        } catch (wzh_err) {
+            console.warn('[supabase] 本地配置保存失败：', wzh_err);
+        }
+    }
+
+    /**
+     * 功能名称：wzh_loadConfig
+     * 功能简介：从 localStorage 恢复上次填写的 URL、key 与表名；没有记录时保持不变。
+     */
+    function wzh_loadConfig() {
+        try {
+            var wzh_raw = localStorage.getItem(wzh_STORE_KEY);
+            if (!wzh_raw) {
+                return;
+            }
+            var wzh_cfg = JSON.parse(wzh_raw);
+            document.getElementById('wzh_sb_url').value = wzh_cfg.url || '';
+            document.getElementById('wzh_sb_key').value = wzh_cfg.key || '';
+            document.getElementById('wzh_sb_table').value = wzh_cfg.table || 'wzh_projects';
+        } catch (wzh_err) {
+            console.warn('[supabase] 本地配置读取失败：', wzh_err);
+        }
+    }
+
+    /**
+     * 功能名称：wzh_loadData
+     * 功能简介：校验 URL / key / 表名后，用 fetch 请求 Supabase REST 接口并渲染卡片；
+     *           未填配置时给出提示并保留演示入口，失败信息写入状态区和控制台。
+     */
+    async function wzh_loadData() {
+        var wzh_url = document.getElementById('wzh_sb_url').value.trim().replace(/\/$/, '');
+        var wzh_key = document.getElementById('wzh_sb_key').value.trim();
+        var wzh_table = document.getElementById('wzh_sb_table').value.trim();
+        var wzh_btn = document.getElementById('wzh_sb_load');
+
+        if (!wzh_url || !wzh_key) {
+            wzh_setStatus('还没填 Project URL 或 anon key，可先点「用演示数据」看效果。', true);
+            return;
+        }
+        if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(wzh_url)) {
+            wzh_setStatus('Project URL 格式应为 https://xxxx.supabase.co', true);
+            return;
+        }
+        if (!/^[a-z0-9_]+$/.test(wzh_table)) {
+            wzh_setStatus('表名只能包含小写字母、数字和下划线', true);
+            return;
+        }
+
+        wzh_saveConfig();
+        wzh_btn.disabled = true;
+        wzh_btn.textContent = '读取中…';
+        wzh_setStatus('正在请求 ' + wzh_url + '/rest/v1/' + wzh_table + ' …');
+
+        var wzh_api = wzh_url + '/rest/v1/' + encodeURIComponent(wzh_table) + '?select=*';
+        try {
+            var wzh_resp = await fetch(wzh_api, {
+                headers: {
+                    apikey: wzh_key,
+                    Authorization: 'Bearer ' + wzh_key
+                }
+            });
+            var wzh_text = await wzh_resp.text();
+            var wzh_rows = [];
+            try {
+                wzh_rows = JSON.parse(wzh_text);
+            } catch (wzh_parseErr) {
+                wzh_rows = [];
+            }
+
+            console.log('[supabase] REST 响应：', wzh_resp.status, wzh_rows);
+
+            if (!wzh_resp.ok) {
+                wzh_setStatus('接口返回 ' + wzh_resp.status + '：' + wzh_text.slice(0, 160), true);
+                return;
+            }
+            if (!Array.isArray(wzh_rows)) {
+                wzh_setStatus('返回的不是数组，请检查表名与权限。', true);
+                return;
+            }
+
+            wzh_renderRows(wzh_rows, false);
+            wzh_setStatus('读取成功：' + wzh_rows.length + ' 条 · 来源 ' + wzh_url + '（真实接口）');
+        } catch (wzh_err) {
+            console.error('[supabase] 请求失败：', wzh_err);
+            wzh_setStatus('请求失败：' + wzh_err.message + '（检查网络、URL，或项目是否被暂停）', true);
+        } finally {
+            wzh_btn.disabled = false;
+            wzh_btn.textContent = '读取数据';
+        }
+    }
+
+    /**
+     * 功能名称：wzh_init
+     * 功能简介：绑定复制、生成配置、演示数据与清理按钮，恢复本地配置并生成默认 MCP 文本。
+     */
+    function wzh_init() {
+        document.getElementById('wzh_mcp_ref').addEventListener('input', wzh_buildMcp);
+        document.getElementById('wzh_mcp_copy').addEventListener('click', function () {
+            wzh_copyText('wzh_mcp_code', this);
+        });
+        document.getElementById('wzh_prompt_copy').addEventListener('click', function () {
+            wzh_copyText('wzh_prompt_code', this);
+        });
+        document.getElementById('wzh_verify_copy').addEventListener('click', function () {
+            wzh_copyText('wzh_verify_code', this);
+        });
+        document.getElementById('wzh_sb_load').addEventListener('click', wzh_loadData);
+        document.getElementById('wzh_sb_demo').addEventListener('click', function () {
+            wzh_renderRows(wzh_demoRows(), true);
+            wzh_setStatus('当前展示内置演示数据，共 8 条（未调用接口）。');
+        });
+        document.getElementById('wzh_sb_clear').addEventListener('click', function () {
+            try {
+                localStorage.removeItem(wzh_STORE_KEY);
+            } catch (wzh_err) {
+                console.warn('[supabase] 清理本地配置失败：', wzh_err);
+            }
+            document.getElementById('wzh_sb_url').value = '';
+            document.getElementById('wzh_sb_key').value = '';
+            document.getElementById('wzh_sb_table').value = 'wzh_projects';
+            document.getElementById('wzh_sb_cards').innerHTML = '';
+            wzh_setStatus('本地配置已清除。');
+        });
+
+        wzh_loadConfig();
+        wzh_buildMcp();
+
+        // 已预填课程项目配置时直接读真实接口，出错自动回落到演示数据
+        var wzh_hasConfig = document.getElementById('wzh_sb_url').value.trim()
+            && document.getElementById('wzh_sb_key').value.trim();
+        if (wzh_hasConfig) {
+            wzh_loadData();
+        } else {
+            wzh_renderRows(wzh_demoRows(), true);
+            wzh_setStatus('先展示 8 条演示数据；填入 URL 与 anon key 后可读取真实接口。');
+        }
+    }
+
+    wzh_init();
+})();
+</script>
+</body>
+</html>
