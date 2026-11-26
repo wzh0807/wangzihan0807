@@ -88,3 +88,5 @@
 2026-11-26 14:42 | DeepSeek-V4.1-Flash | 吧学号姓名写在截图的界面上（附图：LLM 实践页）
 
 2026-11-26 14:44 | DeepSeek-V4.1-Flash | 还是用不了（附图：GitHub Pages 静态模式无法访问 /api/chat）——改用 Supabase Edge Function 代理
+
+2026-11-26 15:05 | DeepSeek-V4.1-Flash | （上传截图，无文字）参照课堂演示版重做图文页：分类筛选按钮 + 返回条数统计 + 带分类角标的图文卡片

@@ -5,14 +5,92 @@
 <!--
   姓名：王子涵 | 学号：0807 | 时间：2026-11-23 | 大模型：DeepSeek-V4.1-Flash
   功能名称：图文列表页
-  功能简介：页面顶部显示接口地址，下方用网格展示 wzh_gallery 表中的"上图下文"卡片，
+  功能简介：页面顶部显示接口地址与分类筛选，下方用网格展示 wzh_gallery 表中的“上图下文”卡片，
             图片加载失败时自动换成占位色块。
 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>图文列表 | 王子涵 0807</title>
 <link rel="stylesheet" href="./css/style.css">
+<style>
+/* ===== 本页专属：图文数据 + 分类筛选（参照课堂演示版式） ===== */
+body.wzh_gallery_page {
+  background:
+    radial-gradient(900px 500px at 12% -8%, rgba(34, 211, 238, .16), transparent 60%),
+    radial-gradient(800px 520px at 92% 6%, rgba(99, 102, 241, .14), transparent 62%),
+    #070d1a;
+}
+.wzh_g_wrap { position: relative; width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 30px 0 56px; }
+.wzh_g_head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.wzh_g_bar { width: 6px; height: 26px; border-radius: 3px; background: linear-gradient(180deg, #22d3ee, #6366f1); }
+.wzh_g_head h1 { margin: 0; font-size: 24px; letter-spacing: .02em; }
+.wzh_g_head .wzh_g_icon {
+  width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+  color: #7dd3fc; background: rgba(34, 211, 238, .12); border: 1px solid rgba(34, 211, 238, .3);
+  font-size: 16px;
+}
+.wzh_g_chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.wzh_g_chip {
+  padding: 8px 18px; border-radius: 999px; cursor: pointer;
+  font-family: inherit; font-size: 13.5px; color: #b6c9e3;
+  background: rgba(20, 34, 58, .7); border: 1px solid rgba(112, 160, 220, .28);
+  transition: all .18s ease;
+}
+.wzh_g_chip:hover { border-color: rgba(34, 211, 238, .6); color: #e6f6ff; }
+.wzh_g_chip.wzh_g_active {
+  color: #052027; font-weight: 700;
+  background: linear-gradient(100deg, #22d3ee, #7dd3fc);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(34, 211, 238, .28);
+}
+.wzh_g_summary {
+  margin: 0 0 18px; padding: 13px 16px; border-radius: 10px;
+  font-size: 13.5px; color: #b6c9e3;
+  background: rgba(12, 24, 44, .72); border: 1px solid rgba(112, 160, 220, .2);
+}
+.wzh_g_summary b { color: #22d3ee; }
+.wzh_g_summary code {
+  padding: 2px 7px; border-radius: 5px; font-family: Consolas, monospace; font-size: 12.5px;
+  color: #7dd3fc; background: rgba(34, 211, 238, .1);
+}
+.wzh_g_summary a { color: #7dd3fc; font-size: 12.5px; }
+.wzh_g_grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+.wzh_g_card {
+  overflow: hidden; border-radius: 16px;
+  border: 1px solid rgba(112, 160, 220, .22);
+  background: rgba(12, 24, 44, .78);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .32);
+  transition: transform .2s ease, border-color .2s ease;
+}
+.wzh_g_card:hover { transform: translateY(-4px); border-color: rgba(34, 211, 238, .5); }
+.wzh_g_thumb {
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden;
+  background: radial-gradient(400px 220px at 50% 40%, rgba(56, 120, 220, .35), transparent 70%), #0b1830;
+}
+.wzh_g_thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wzh_g_thumb.wzh_fallback::after {
+  content: "图片加载失败"; position: absolute; inset: 0;
+  display: grid; place-items: center; font-size: 13px; color: #cbd5e1;
+  background: linear-gradient(135deg, #1e3a5f, #0f172a);
+}
+.wzh_g_badge {
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  padding: 4px 12px; border-radius: 999px; font-size: 12px; color: #c7f9ff;
+  background: rgba(6, 22, 34, .78); border: 1px solid rgba(34, 211, 238, .55);
+  backdrop-filter: blur(6px);
+}
+.wzh_g_body { padding: 14px 16px 16px; }
+.wzh_g_body h3 { margin: 0 0 6px; font-size: 16.5px; }
+.wzh_g_body p { margin: 0; font-size: 13.4px; color: #93a6c2; line-height: 1.75; }
+.wzh_g_time { display: inline-block; margin-top: 10px; font-size: 12px; color: #7b8ca7; }
+@media (max-width: 700px) {
+  .wzh_g_wrap { width: calc(100% - 24px); padding-top: 20px; }
+  .wzh_g_head h1 { font-size: 20px; }
+  .wzh_g_chip { padding: 6px 13px; font-size: 12.5px; }
+  .wzh_g_grid { grid-template-columns: 1fr; }
+}
+</style>
 </head>
-<body>
+<body class="wzh_gallery_page">
 
 <header class="wzh_topbar">
   <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
@@ -26,12 +104,18 @@
   </nav>
 </header>
 
-<main class="wzh_wrap">
-  <div class="wzh_api_bar">
-    <span class="wzh_api_label">当前调用接口：</span>
-    <code id="wzh_api_url">/api/gallery</code>
-    <a id="wzh_api_link" href="/api/gallery" target="_blank" rel="noopener">打开接口看 JSON ↗</a>
+<main class="wzh_g_wrap">
+  <div class="wzh_g_head">
+    <span class="wzh_g_bar"></span>
+    <span class="wzh_g_icon">▣</span>
+    <h1>图文数据</h1>
   </div>
+
+  <div class="wzh_g_chips" id="wzh_g_chips"></div>
+
+  <p class="wzh_g_summary" id="wzh_g_summary">
+    正在读取接口 <code>/api/gallery</code> …
+  </p>
 
   <div id="wzh_gallery_box">
     <div class="wzh_empty">正在从数据库读取图文数据…</div>
@@ -43,6 +127,6 @@
   </footer>
 </main>
 
-<script src="./js/wzh_gallery.js"></script>
+<script src="./js/wzh_gallery.js?v=20261126a"></script>
 </body>
 </html>
