@@ -1,0 +1,112 @@
+[
+  {
+    "id": "trace_1795567701008_zyl9d",
+    "time": "2026-11-25T00:48:21.008Z",
+    "module": "语音识别",
+    "action": "语音识别：wzh_asr_test.wav",
+    "status": "success",
+    "provider": "硅基流动",
+    "model": "FunAudioLLM/SenseVoiceSmall",
+    "durationMs": 1691,
+    "detail": "音频 364KB；转写：你好，我是王子涵，学号0807，这是课程实践的语音识别测试。"
+  },
+  {
+    "id": "trace_1795567691628_izd3x",
+    "time": "2026-11-25T00:48:11.628Z",
+    "module": "图像识别",
+    "action": "图像识别：wzh_vision_test.png",
+    "status": "success",
+    "provider": "硅基流动",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "durationMs": 3326,
+    "detail": "图片 10KB；问题：请用简体中文描述这张图片的物体、颜色、场景和文字。；答：这张图片包含以下元素：\n\n- **物体**：一个蓝色的圆形和一个橙色的长方形。\n- **颜色**：蓝色、橙色，背景为白色。\n- **场景**：简洁的图形测试界面"
+  },
+  {
+    "id": "trace_1795567682790_d852j",
+    "time": "2026-11-25T00:48:02.790Z",
+    "module": "知识库",
+    "action": "知识库提问：营业时间是什么",
+    "status": "success",
+    "provider": "硅基流动",
+    "model": "deepseek-ai/DeepSeek-V4-Flash",
+    "durationMs": 4290,
+    "detail": "命中 2 个片段，最高相似度 0.477；答：营业时间为每天10:00到22:00，最后点餐时间为21:30。(资料1)"
+  },
+  {
+    "id": "trace_1795567630945_xy14o",
+    "time": "2026-11-25T00:47:10.945Z",
+    "module": "AI客服",
+    "action": "对话 · 硅基流动",
+    "status": "success",
+    "provider": "siliconflow",
+    "model": "deepseek-ai/DeepSeek-V4-Flash",
+    "durationMs": 2514,
+    "detail": "问：你们几点关门？；答：您好，我们每天营业到晚上22:00，最后点餐时间是21:30哦～欢迎您来品尝！"
+  },
+  {
+    "id": "trace_1795567480187_dk7fp",
+    "time": "2026-11-25T00:44:40.188Z",
+    "module": "AI客服",
+    "action": "对话 · 七牛云",
+    "status": "fail",
+    "provider": "qiniu",
+    "model": "qiniu/conatus-free",
+    "durationMs": 0,
+    "detail": "七牛云 还没有配置 API Key，请在 backend/.env 填写后重启后端"
+  },
+  {
+    "id": "trace_1795567480137_m6hqt",
+    "time": "2026-11-25T00:44:40.137Z",
+    "module": "AI客服",
+    "action": "对话 · 硅基流动",
+    "status": "success",
+    "provider": "siliconflow",
+    "model": "deepseek-ai/DeepSeek-V4-Flash",
+    "durationMs": 4773,
+    "detail": "问：你们几点关门？；答：您好，中华美食街营业时间是中午11:00至晚上21:00。请问还有其他需要帮助的吗？"
+  },
+  {
+    "id": "trace_1795567470920_l90qf",
+    "time": "2026-11-25T00:44:30.920Z",
+    "module": "语音识别",
+    "action": "语音识别：wzh_asr_test.wav",
+    "status": "success",
+    "provider": "硅基流动",
+    "model": "FunAudioLLM/SenseVoiceSmall",
+    "durationMs": 12878,
+    "detail": "音频 364KB；转写：你好，我是王子涵，学号0807，这是课程实践的语音识别测试。"
+  },
+  {
+    "id": "trace_1795567449006_7eek1",
+    "time": "2026-11-25T00:44:09.006Z",
+    "module": "图像识别",
+    "action": "图像识别：wzh_vision_test.png",
+    "status": "success",
+    "provider": "硅基流动",
+    "model": "Qwen/Qwen3-VL-8B-Instruct",
+    "durationMs": 4416,
+    "detail": "图片 10KB；问题：请用中文描述这张图的形状、颜色和文字内容；答：好的，这张图包含以下元素：\n\n*   **形状**：\n    *   左侧是一个**蓝色的圆形**。\n    *   右侧是一个**橙色的长方形**（或矩形）。"
+  },
+  {
+    "id": "trace_1795567435827_ac5h5",
+    "time": "2026-11-25T00:43:55.827Z",
+    "module": "知识库",
+    "action": "知识库提问：中华美食街的营业时间、招牌菜和配送规则分别是什么？",
+    "status": "success",
+    "provider": "硅基流动",
+    "model": "deepseek-ai/DeepSeek-V4-Flash",
+    "durationMs": 1586,
+    "detail": "命中 2 个片段，最高相似度 0.577；答：中华美食街的营业时间、招牌菜和配送规则如下（资料1）：\n\n- **营业时间**：每天10:00到22:00，最后点餐时间为21:30。\n- **招牌菜**：招牌"
+  },
+  {
+    "id": "trace_1795567430447_br4ui",
+    "time": "2026-11-25T00:43:50.447Z",
+    "module": "知识库",
+    "action": "上传知识库文件：wzh_kb_demo.md",
+    "status": "success",
+    "provider": "硅基流动",
+    "model": "BAAI/bge-m3",
+    "durationMs": 529,
+    "detail": "切分为 2 个片段并写入向量索引"
+  }
+]

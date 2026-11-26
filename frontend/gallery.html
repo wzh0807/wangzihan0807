@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  姓名：王子涵 | 学号：0807 | 时间：2026-11-23 | 大模型：DeepSeek-V4.1-Flash
+  功能名称：图文列表页
+  功能简介：页面顶部显示接口地址，下方用网格展示 wzh_gallery 表中的"上图下文"卡片，
+            图片加载失败时自动换成占位色块。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图文列表 | 王子涵 0807</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<header class="wzh_topbar">
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <nav class="wzh_nav">
+    <a href="./index.html">首页</a>
+    <a href="./database.html">数据库连接</a>
+    <a href="./news.html">科技新闻</a>
+    <a class="wzh_active" href="./gallery.html">图文列表</a>
+    <a href="./ai-chat.html">AI 应用</a>
+    <a href="./ai-task.html">任务报告</a>
+    <a href="./llm-practice.html">课程实践</a>
+  </nav>
+</header>
+
+<main class="wzh_wrap">
+  <div class="wzh_api_bar">
+    <span class="wzh_api_label">当前调用接口：</span>
+    <code id="wzh_api_url">/api/gallery</code>
+    <a id="wzh_api_link" href="/api/gallery" target="_blank" rel="noopener">打开接口看 JSON ↗</a>
+  </div>
+
+  <div id="wzh_gallery_box">
+    <div class="wzh_empty">正在从数据库读取图文数据…</div>
+  </div>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 0807 · 高级网页设计</span>
+    <span>数据表：wzh_gallery · 接口：GET /api/gallery</span>
+  </footer>
+</main>
+
+<script src="./js/wzh_gallery.js"></script>
+</body>
+</html>

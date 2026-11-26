@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  姓名：王子涵 | 学号：0807 | 时间：2026-11-25 | 大模型：DeepSeek-V4.1-Flash
+  功能名称：课程实践 · LLM 操作痕迹静态演示版
+  功能简介：把本地 8807 后端实测通过的四项实践结果做成静态快照，
+           用于 Netlify 展示；页面不发起 /api 请求，操作痕迹来自 data/traces.json。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课程实践 · LLM 操作痕迹 | 王子涵 0807</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+  .wzh_demo_banner {
+    margin-top: 18px; padding: 14px 16px;
+    border: 1px solid rgba(251, 146, 60, .45);
+    border-radius: 12px;
+    background: rgba(251, 146, 60, .1);
+    font-size: 13.4px; color: #fed7aa; line-height: 1.7;
+  }
+  .wzh_demo_banner b { color: #ffedd5; }
+  .wzh_demo_note {
+    margin-top: 10px; padding: 10px 12px;
+    border-left: 3px solid var(--wzh_cyan);
+    border-radius: 8px;
+    background: rgba(34, 211, 238, .07);
+    font-size: 12.6px; color: var(--wzh_muted); line-height: 1.7;
+  }
+  .wzh_demo_note b { color: var(--wzh_cyan); }
+  .wzh_msg_meta {
+    margin-top: 6px; font-size: 11.5px;
+    color: var(--wzh_muted);
+  }
+  .wzh_demo_disabled {
+    opacity: .75; cursor: not-allowed;
+  }
+  .wzh_demo_audio { width: 100%; }
+  .wzh_demo_doc_icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; flex: none;
+    border-radius: 9px; font-size: 12px; font-weight: 700;
+    color: #06131b; background: linear-gradient(100deg, var(--wzh_cyan), #67e8f9);
+  }
+  .wzh_demo_trace_list { max-height: none; }
+  .wzh_demo_footnote {
+    margin-top: 8px; font-size: 12px; color: var(--wzh_muted);
+  }
+</style>
+</head>
+<body>
+
+<header class="wzh_topbar">
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <nav class="wzh_nav">
+    <a href="#chat">AI 客服</a>
+    <a href="#kb">知识库</a>
+    <a href="#vision">图像识别</a>
+    <a href="#asr">语音识别</a>
+    <a class="wzh_active" href="#traces">操作痕迹</a>
+  </nav>
+</header>
+
+<main class="wzh_wrap">
+  <section class="wzh_hero wzh_hero_compact">
+    <span class="wzh_eyebrow">COURSE PRACTICE · LLM OPERATION TRACE</span>
+    <h1>课程实践<br><span>LLM 实践操作痕迹展示</span></h1>
+    <p class="wzh_lead">
+      四项实践都已在本机 <b>http://localhost:8807</b> 用真实接口跑通：
+      AI 客服双平台切换、文件知识库、图像识别、语音识别。本页是给 Netlify 的静态快照，
+      保留当时的真实返回结果与后端操作痕迹。
+    </p>
+    <div class="wzh_meta_row">
+      <span class="wzh_chip">实测结果：<b>4 / 4 通过</b></span>
+      <span class="wzh_chip">知识库向量：<b>BAAI/bge-m3</b></span>
+      <span class="wzh_chip">图像识别：<b>Qwen3-VL-8B</b></span>
+      <span class="wzh_chip">语音识别：<b>SenseVoiceSmall</b></span>
+    </div>
+  </section>
+
+  <div class="wzh_demo_banner">
+    <b>静态演示说明：</b>本页部署在 Netlify，没有 Node 后端，所以上传、录音与实时对话按钮不会真正调用模型。
+    下面展示的是本地后端实测成功的真实数据：知识库命中的片段与相似度、图像识别原文、语音转写文字，以及 10 条操作痕迹。
+    完整交互请在本机运行 <b>start.bat</b> 后访问 <b>http://localhost:8807/llm-practice.html</b>。
+  </div>
+
+  <section class="wzh_practice">
+
+    <!-- 实践一 -->
+    <article class="wzh_practice_card" id="chat">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">实践一 / 平台热切换</span>
+          <h2 class="wzh_practice_title">AI 客服 · 硅基流动 / 七牛云</h2>
+          <p class="wzh_practice_sub">
+            前端下拉框只传 provider，后端按平台读取 backend/.env 里的 baseURL、model 与 Key；
+            切换后下一条消息立即走新平台。
+          </p>
+        </div>
+        <span class="wzh_badge wzh_badge_ok">硅基流动已通过</span>
+      </div>
+
+      <div class="wzh_chat_tools">
+        <label class="wzh_select_wrap" for="wzh_demo_provider">
+          <span>调用平台</span>
+          <select class="wzh_select wzh_demo_disabled" id="wzh_demo_provider" disabled>
+            <option>硅基流动 · deepseek-ai/DeepSeek-V4-Flash（已实测）</option>
+            <option>七牛云 · qiniu/conatus-free（待填 Key）</option>
+          </select>
+        </label>
+        <span class="wzh_chat_tip">静态页保留切换入口；本地切换后下一条消息立即生效</span>
+      </div>
+
+      <div class="wzh_chat_box wzh_chat_mini">
+        <div class="wzh_msg wzh_msg_user">
+          <div class="wzh_msg_text">你们几点关门？</div>
+        </div>
+        <div class="wzh_msg wzh_msg_ai">
+          <div class="wzh_msg_text">您好，我们每天营业到晚上 22:00，最后点餐时间是 21:30 哦～欢迎您来品尝！</div>
+          <div class="wzh_msg_meta">本回复来自 硅基流动 · deepseek-ai/DeepSeek-V4-Flash</div>
+        </div>
+        <div class="wzh_msg wzh_msg_ai">
+          <div class="wzh_msg_text">七牛云切换记录：后端已识别 provider=qiniu，但 QINIU_API_KEY 为空，返回「七牛云 还没有配置 API Key」。填入 Key 并重启后端后即可照常对话。</div>
+          <div class="wzh_msg_meta">平台切换失败也会写入操作痕迹，方便答辩说明排查过程</div>
+        </div>
+      </div>
+
+      <div class="wzh_demo_note">
+        <b>后端怎么读配置：</b>config/wzh_aiProviders.js 从 .env 读取 SILICONFLOW_* 与 QINIU_*；
+        控制器只接收 provider 参数，不接收 Key。Key 始终不出现在前端源码、接口响应和本页面中。
+      </div>
+    </article>
+
+    <!-- 实践二 -->
+    <article class="wzh_practice_card" id="kb">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">实践二 / 知识库</span>
+          <h2 class="wzh_practice_title">上传文件 → 分块向量化 → 检索回答</h2>
+          <p class="wzh_practice_sub">
+            文件保存在 backend/uploads/kb，索引与向量保存在 backend/data；
+            提问时先用 bge-m3 检索 top4 片段，再让对话模型只依据资料回答。
+          </p>
+        </div>
+        <span class="wzh_badge wzh_badge_ok">已通过</span>
+      </div>
+
+      <div class="wzh_practice_split">
+        <div class="wzh_practice_panel">
+          <h3>1. 已上传的知识库文件</h3>
+          <p class="wzh_hint">演示文件为自建的课程实践说明，2 个片段，已写入向量索引。</p>
+
+          <div class="wzh_kb_doc">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+              <span class="wzh_demo_doc_icon">MD</span>
+              <div>
+                <div class="wzh_kb_doc_name">wzh_kb_demo.md</div>
+                <div class="wzh_kb_doc_meta">2.18 KB · 2 个片段 · 2026/11/25 08:43:50</div>
+              </div>
+            </div>
+            <span class="wzh_badge wzh_badge_ok">已索引</span>
+          </div>
+
+          <div class="wzh_result wzh_ok">
+            上传成功：wzh_kb_demo.md
+            切分 2 个片段，已用 BAAI/bge-m3 写入向量索引。
+          </div>
+
+          <p class="wzh_hint">
+            本地页面上传后会显示真实文档列表，并可逐条删除；删除会同时清理索引与原始文件。
+          </p>
+        </div>
+
+        <div class="wzh_practice_panel">
+          <h3>2. 向知识库提问</h3>
+          <p class="wzh_hint">问题：营业时间是什么</p>
+
+          <div class="wzh_result wzh_ok">
+            营业时间是每天 10:00 到 22:00，最后点餐时间为 21:30。(资料1)
+          </div>
+
+          <div class="wzh_kb_matches">
+            <div class="wzh_kb_match">
+              <div>资料1 · wzh_kb_demo.md · 片段 1 · 相似度 <b>0.4784</b></div>
+              <p># 王子涵全栈项目 · 课程实践知识库 … 姓名：王子涵；学号：0807；课程：高级网页设计（2026-2027-1）…</p>
+            </div>
+            <div class="wzh_kb_match">
+              <div>资料2 · wzh_kb_demo.md · 片段 2 · 相似度 <b>0.3637</b></div>
+              <p>… API Key 只保存在 backend/.env，前端源码与文档中都不出现 Key 原文 … 七牛云的对话模型是 qiniu/conatus-free …</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 实践三 -->
+    <article class="wzh_practice_card" id="vision">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">实践三 / 图像识别</span>
+          <h2 class="wzh_practice_title">上传图片 → Qwen3-VL 生成中文描述</h2>
+          <p class="wzh_practice_sub">
+            图片由前端以 multipart 上传，后端转 base64 data URL 后请求视觉模型，Key 只在 .env。
+          </p>
+        </div>
+        <span class="wzh_badge wzh_badge_ok">已通过 · 3326 ms</span>
+      </div>
+
+      <div class="wzh_practice_split">
+        <div class="wzh_practice_panel">
+          <h3>1. 测试图片</h3>
+          <p class="wzh_hint">用 PowerShell + System.Drawing 现场生成：蓝色圆形、橙色长方形、两行文字。</p>
+          <div class="wzh_preview">
+            <img src="./assets/wzh_vision_test.png" alt="图像识别测试图片：蓝色圆形、橙色长方形、WZH 0807 与 图像识别测试">
+          </div>
+          <p class="wzh_hint">wzh_vision_test.png · 10 KB · PNG</p>
+        </div>
+
+        <div class="wzh_practice_panel">
+          <h3>2. 模型返回</h3>
+          <p class="wzh_hint">问题：请用简体中文描述这张图片的物体、颜色、场景和文字。</p>
+          <div class="wzh_result wzh_ok">
+            这张图片包含以下元素：
+            - 物体：一个蓝色的圆形和一个橙色的长方形。
+            - 颜色：蓝色、橙色，背景为白色。
+            - 场景：简洁的图形测试界面。
+            - 文字：图片下方有两行黑色文字：「WZH 0807」和「图像识别测试」。
+
+            —— 硅基流动 · Qwen/Qwen3-VL-8B-Instruct
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 实践四 -->
+    <article class="wzh_practice_card" id="asr">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">实践四 / 语音识别</span>
+          <h2 class="wzh_practice_title">录音或上传音频 → SenseVoice 转写</h2>
+          <p class="wzh_practice_sub">
+            浏览器录音用 getUserMedia + MediaRecorder；也可以直接上传 wav / mp3 等音频文件。
+          </p>
+        </div>
+        <span class="wzh_badge wzh_badge_ok">已通过 · 1691 ms</span>
+      </div>
+
+      <div class="wzh_practice_split">
+        <div class="wzh_practice_panel">
+          <h3>1. 测试音频</h3>
+          <p class="wzh_hint">用 Windows 中文语音合成生成 9 秒 WAV，内容为「你好，我是王子涵，学号0807，这是课程实践的语音识别测试。」</p>
+          <audio class="wzh_demo_audio" controls src="./assets/wzh_asr_test.wav"></audio>
+          <p class="wzh_hint">wzh_asr_test.wav · 364 KB · 9 秒</p>
+        </div>
+
+        <div class="wzh_practice_panel">
+          <h3>2. 模型返回</h3>
+          <p class="wzh_hint">接口：POST /api/asr · 模型：FunAudioLLM/SenseVoiceSmall</p>
+          <div class="wzh_result wzh_ok">
+            你好，我是王子涵，学号0807，这是课程实践的语音识别测试。
+
+            —— 硅基流动 · FunAudioLLM/SenseVoiceSmall
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 操作痕迹 -->
+    <article class="wzh_practice_card" id="traces">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">操作痕迹 / 持久化证据</span>
+          <h2 class="wzh_practice_title">本地后端实测留下的 10 条记录</h2>
+          <p class="wzh_practice_sub">
+            数据来自 backend/data/wzh_llm_traces.json，已复制为本站的 data/traces.json；
+            只记录摘要，不包含 Key 与原始文件内容。
+          </p>
+        </div>
+        <span class="wzh_badge" id="wzh_demo_trace_count">读取中…</span>
+      </div>
+
+      <div class="wzh_trace_summary">
+        <div class="wzh_trace_summary_item wzh_summary_ok"><b>AI 客服</b><span>已通过 · 硅基流动对话</span></div>
+        <div class="wzh_trace_summary_item wzh_summary_ok"><b>知识库</b><span>已通过 · 上传与检索问答</span></div>
+        <div class="wzh_trace_summary_item wzh_summary_ok"><b>图像识别</b><span>已通过 · 形状/颜色/文字</span></div>
+        <div class="wzh_trace_summary_item wzh_summary_ok"><b>语音识别</b><span>已通过 · 中文转写</span></div>
+      </div>
+
+      <div class="wzh_trace_list wzh_demo_trace_list" id="wzh_demo_trace_list">
+        <div class="wzh_empty">正在读取操作痕迹…</div>
+      </div>
+
+      <p class="wzh_demo_footnote">
+        刷新页面不会丢失：这些记录已经写入本地 JSON 文件。完整页面可以在「课程实践」里点击「清空痕迹」后重新演示。
+      </p>
+    </article>
+
+  </section>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 0807 · 高级网页设计 2026-2027-1</span>
+    <span>静态快照：四项实践实测结果 + 操作痕迹 · 完整交互需本地启动 8807</span>
+  </footer>
+</main>
+
+<script>
+/**
+ * 姓名：王子涵 | 学号：0807 | 时间：2026-11-25 | 大模型：DeepSeek-V4.1-Flash
+ * 功能名称：静态演示版操作痕迹渲染
+ * 功能简介：读取同目录 data/traces.json（本地实测痕迹的拷贝），
+ *           按时间倒序渲染成卡片；失败时在列表里显示提示，不影响其他模块。
+ */
+(function () {
+  'use strict';
+
+  var wzh_list = document.getElementById('wzh_demo_trace_list');
+  var wzh_count = document.getElementById('wzh_demo_trace_count');
+
+  function wzh_escapeHtml(wzh_str) {
+    return String(wzh_str == null ? '' : wzh_str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function wzh_fmtTime(wzh_iso) {
+    var wzh_date = new Date(wzh_iso);
+    if (isNaN(wzh_date.getTime())) {
+      return String(wzh_iso || '');
+    }
+    return wzh_date.toLocaleString('zh-CN', { hour12: false });
+  }
+
+  fetch('./data/traces.json')
+    .then(function (wzh_resp) {
+      if (!wzh_resp.ok) {
+        throw new Error('HTTP ' + wzh_resp.status);
+      }
+      return wzh_resp.json();
+    })
+    .then(function (wzh_traces) {
+      var wzh_items = Array.isArray(wzh_traces) ? wzh_traces : [];
+      wzh_count.textContent = wzh_items.length + ' 条';
+
+      if (!wzh_items.length) {
+        wzh_list.innerHTML = '<div class="wzh_empty">还没有操作痕迹。</div>';
+        return;
+      }
+
+      wzh_list.innerHTML = wzh_items.map(function (wzh_item) {
+        var wzh_ok = wzh_item.status === 'success';
+        return [
+          '<div class="wzh_trace_item ' + (wzh_ok ? '' : 'wzh_trace_fail') + '">',
+          '  <div class="wzh_trace_top">',
+          '    <span class="wzh_trace_time">' + wzh_escapeHtml(wzh_fmtTime(wzh_item.time)) + '</span>',
+          '    <span class="wzh_trace_module">' + wzh_escapeHtml(wzh_item.module) + '</span>',
+          '    <span class="' + (wzh_ok ? 'wzh_trace_status_ok' : 'wzh_trace_status_fail') + '">' + (wzh_ok ? '成功' : '失败') + '</span>',
+          '    <span class="wzh_trace_ms">' + (Number(wzh_item.durationMs) || 0) + ' ms</span>',
+          '  </div>',
+          '  <div class="wzh_trace_action">' + wzh_escapeHtml(wzh_item.action) + '</div>',
+          '  <div class="wzh_trace_detail">' + wzh_escapeHtml(wzh_item.detail) +
+            (wzh_item.provider || wzh_item.model ? '\n平台：' + wzh_escapeHtml(wzh_item.provider) + ' · 模型：' + wzh_escapeHtml(wzh_item.model) : '') +
+            '</div>',
+          '</div>'
+        ].join('');
+      }).join('');
+    })
+    .catch(function (wzh_err) {
+      console.error('[demo][traces] 读取失败：', wzh_err);
+      wzh_count.textContent = '读取失败';
+      wzh_list.innerHTML = '<div class="wzh_empty">操作痕迹读取失败：' + wzh_escapeHtml(wzh_err.message) + '</div>';
+    });
+})();
+</script>
+</body>
+</html>

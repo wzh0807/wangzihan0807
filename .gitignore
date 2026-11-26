@@ -1,0 +1,15 @@
+# 依赖与凭据，不进版本库
+node_modules/
+.env
+*.log
+.DS_Store
+Thumbs.db
+
+# 课程实践运行时产生的上传文件与索引，不进版本库
+backend/uploads/
+backend/data/
+
+# IDE / 工具自动生成的分享包与截图，不进版本库
+.trae-html-share-packages/
+.screenshots/
+*.zip

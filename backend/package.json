@@ -1,0 +1,18 @@
+{
+  "name": "wzh-fullstack-init",
+  "version": "1.0.0",
+  "private": true,
+  "description": "王子涵的全栈项目初始化课堂案例：Express + MySQL + 原生前端",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^2.5.0",
+    "mysql2": "^3.11.0"
+  }
+}

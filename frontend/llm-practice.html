@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  姓名：王子涵 | 学号：0807 | 时间：2026-11-25 | 大模型：DeepSeek-V4.1-Flash
+  功能名称：课程实践 · LLM 实践操作痕迹展示
+  功能简介：一个页面完成四项现场演示：1. 硅基流动 / 七牛云双平台 AI 客服热切换；
+           2. 上传文件建立知识库并检索问答；3. 上传图片做图像识别；
+           4. 录音或上传音频做语音识别。所有操作都会写入后端操作痕迹。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课程实践 · LLM 操作痕迹 | 王子涵 0807</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<header class="wzh_topbar">
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <nav class="wzh_nav">
+    <a href="./index.html">首页</a>
+    <a href="./database.html">数据库连接</a>
+    <a href="./news.html">科技新闻</a>
+    <a href="./gallery.html">图文列表</a>
+    <a href="./ai-chat.html">AI 应用</a>
+    <a href="./ai-task.html">任务报告</a>
+    <a class="wzh_active" href="./llm-practice.html">课程实践</a>
+  </nav>
+</header>
+
+<main class="wzh_wrap">
+  <section class="wzh_hero wzh_hero_compact">
+    <span class="wzh_eyebrow">COURSE PRACTICE · LLM OPERATION TRACE</span>
+    <h1>课程实践<br><span>LLM 实践操作痕迹展示</span></h1>
+    <p class="wzh_lead">
+      四项现场演示全部走真实接口：双平台 AI 客服、文件知识库、图像识别、语音识别。
+      每次上传、提问、识别都会写入后端操作痕迹，页面底部可以随时查看和清空。
+    </p>
+    <div class="wzh_meta_row">
+      <span class="wzh_chip">对话平台：<b>硅基流动 / 七牛云</b></span>
+      <span class="wzh_chip">知识库向量：<b>BAAI/bge-m3</b></span>
+      <span class="wzh_chip">图像识别：<b>Qwen3-VL-8B</b></span>
+      <span class="wzh_chip">语音识别：<b>SenseVoiceSmall</b></span>
+    </div>
+  </section>
+
+  <div class="wzh_api_bar">
+    <span class="wzh_api_label">后端接口：</span>
+    <code>http://localhost:8807/api</code>
+    <a href="/api/llm/config" target="_blank" rel="noopener">查看平台配置 ↗</a>
+    <a href="/api/llm/traces" target="_blank" rel="noopener">查看操作痕迹 JSON ↗</a>
+  </div>
+
+  <section class="wzh_practice">
+
+    <!-- 实践一：AI 客服双平台热切换 -->
+    <article class="wzh_practice_card" id="wzh_step_chat">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">实践一 / 平台热切换</span>
+          <h2 class="wzh_practice_title">AI 客服 · 硅基流动 / 七牛云</h2>
+          <p class="wzh_practice_sub">
+            前端下拉框只传 provider，后端按平台读取 backend/.env 里的 baseURL、model 与 Key；
+            切换后下一条消息立即走新平台。
+          </p>
+        </div>
+        <span class="wzh_badge" id="wzh_badge_chat">待测试</span>
+      </div>
+
+      <div class="wzh_chat_tools">
+        <label class="wzh_select_wrap" for="wzh_provider_select">
+          <span>调用平台</span>
+          <select class="wzh_select" id="wzh_provider_select"></select>
+        </label>
+        <span class="wzh_chat_tip" id="wzh_provider_tip">正在读取平台配置…</span>
+      </div>
+
+      <div class="wzh_chat_box wzh_chat_mini" id="wzh_practice_chat_box" aria-live="polite">
+        <div class="wzh_msg wzh_msg_ai">
+          <div class="wzh_msg_text">您好，欢迎光临中华美食街～ 我可以回答营业时间、招牌菜、配送范围三类问题。先选一个平台，然后直接提问。</div>
+        </div>
+      </div>
+
+      <form class="wzh_chat_form" id="wzh_practice_chat_form">
+        <textarea class="wzh_chat_input" id="wzh_practice_chat_input" rows="2"
+          placeholder="试试：你们几点关门？招牌菜有什么？能送到哪里？"></textarea>
+        <div class="wzh_chat_actions">
+          <span class="wzh_chat_tip" id="wzh_chat_last">切换平台后发一条消息，就能看到新平台的回复与痕迹</span>
+          <button class="wzh_btn wzh_chat_send" id="wzh_practice_chat_btn" type="submit">发送</button>
+        </div>
+      </form>
+    </article>
+
+    <!-- 实践二：知识库 -->
+    <article class="wzh_practice_card" id="wzh_step_kb">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">实践二 / 知识库</span>
+          <h2 class="wzh_practice_title">上传文件 → 分块向量化 → 检索回答</h2>
+          <p class="wzh_practice_sub">
+            文件保存在 backend/uploads/kb，索引与向量保存在 backend/data；
+            提问时先用 bge-m3 检索 top4 片段，再让对话模型只依据资料回答。
+          </p>
+        </div>
+        <span class="wzh_badge" id="wzh_badge_kb">待测试</span>
+      </div>
+
+      <div class="wzh_practice_split">
+        <div class="wzh_practice_panel">
+          <h3>1. 上传知识库文件</h3>
+          <p class="wzh_hint">支持 txt / md / csv / json / html，单个文件不超过 20MB。</p>
+          <input class="wzh_file" type="file" id="wzh_kb_file"
+            accept=".txt,.md,.markdown,.csv,.json,.html,.htm,.log">
+          <button class="wzh_btn wzh_btn_small" id="wzh_kb_upload_btn" type="button">上传并建立索引</button>
+          <div class="wzh_result" id="wzh_kb_upload_result">还没有上传文件。</div>
+          <div class="wzh_kb_docs" id="wzh_kb_docs"></div>
+        </div>
+
+        <div class="wzh_practice_panel">
+          <h3>2. 向知识库提问</h3>
+          <p class="wzh_hint">问题会先做向量检索，命中的片段与相似度会一起显示。</p>
+          <textarea class="wzh_chat_input" id="wzh_kb_question" rows="2"
+            placeholder="例如：中华美食街的营业时间、招牌菜和配送规则是什么？"></textarea>
+          <button class="wzh_btn wzh_btn_small" id="wzh_kb_ask_btn" type="button">检索并回答</button>
+          <div class="wzh_result" id="wzh_kb_answer">上传文件后在这里提问。</div>
+          <div class="wzh_kb_matches" id="wzh_kb_matches"></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 实践三：图像识别 -->
+    <article class="wzh_practice_card" id="wzh_step_vision">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">实践三 / 图像识别</span>
+          <h2 class="wzh_practice_title">上传图片 → Qwen3-VL 生成中文描述</h2>
+          <p class="wzh_practice_sub">
+            图片由前端转成 multipart 上传，后端转 base64 data URL 后请求视觉模型，Key 只在 .env。
+          </p>
+        </div>
+        <span class="wzh_badge" id="wzh_badge_vision">待测试</span>
+      </div>
+
+      <div class="wzh_practice_split">
+        <div class="wzh_practice_panel">
+          <h3>1. 选择图片</h3>
+          <p class="wzh_hint">支持 jpg / png / webp / gif / bmp，不超过 10MB。</p>
+          <input class="wzh_file" type="file" id="wzh_vision_file" accept="image/*">
+          <div class="wzh_preview" id="wzh_vision_preview">图片预览会显示在这里</div>
+          <p class="wzh_hint" id="wzh_vision_info">还没有选择图片。</p>
+        </div>
+
+        <div class="wzh_practice_panel">
+          <h3>2. 识别图片</h3>
+          <textarea class="wzh_chat_input" id="wzh_vision_question" rows="2"
+            placeholder="默认：请描述图片里的物体、颜色、场景和文字">请用简体中文描述这张图片的物体、颜色、场景和文字。</textarea>
+          <button class="wzh_btn wzh_btn_small" id="wzh_vision_btn" type="button">开始识别</button>
+          <div class="wzh_result" id="wzh_vision_result">识别结果会显示在这里。</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 实践四：语音识别 -->
+    <article class="wzh_practice_card" id="wzh_step_asr">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">实践四 / 语音识别</span>
+          <h2 class="wzh_practice_title">录音或上传音频 → SenseVoice 转写</h2>
+          <p class="wzh_practice_sub">
+            浏览器录音用 getUserMedia + MediaRecorder；也可以直接上传 wav / mp3 等音频文件。
+          </p>
+        </div>
+        <span class="wzh_badge" id="wzh_badge_asr">待测试</span>
+      </div>
+
+      <div class="wzh_practice_split">
+        <div class="wzh_practice_panel">
+          <h3>1. 录音或选择音频</h3>
+          <p class="wzh_hint">首次录音需要允许浏览器使用麦克风。</p>
+          <div class="wzh_asr_actions">
+            <button class="wzh_btn wzh_btn_small" id="wzh_asr_record_btn" type="button">开始录音</button>
+            <button class="wzh_btn wzh_btn_small wzh_btn_ghost" id="wzh_asr_stop_btn" type="button" disabled>停止录音</button>
+            <span class="wzh_hint" id="wzh_asr_timer">00:00</span>
+          </div>
+          <input class="wzh_file" type="file" id="wzh_asr_file" accept="audio/*,.wav,.mp3,.m4a,.webm,.ogg,.flac">
+          <audio class="wzh_audio" id="wzh_asr_audio" controls hidden></audio>
+          <p class="wzh_hint" id="wzh_asr_info">还没有录音或选择音频。</p>
+        </div>
+
+        <div class="wzh_practice_panel">
+          <h3>2. 转写成文字</h3>
+          <p class="wzh_hint">录音结束后会自动填好音频，点击按钮即可转写。</p>
+          <button class="wzh_btn wzh_btn_small" id="wzh_asr_btn" type="button">开始语音识别</button>
+          <div class="wzh_result" id="wzh_asr_result">识别文字会显示在这里。</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 操作痕迹 -->
+    <article class="wzh_practice_card" id="wzh_step_traces">
+      <div class="wzh_practice_head">
+        <div>
+          <span class="wzh_practice_no">操作痕迹 / 持久化证据</span>
+          <h2 class="wzh_practice_title">四项实践的操作记录</h2>
+          <p class="wzh_practice_sub">
+            记录来自后端 backend/data/wzh_llm_traces.json，刷新页面不会丢失；只记录摘要，不记录 Key 和原始文件内容。
+          </p>
+        </div>
+        <span class="wzh_badge" id="wzh_trace_count">0 条</span>
+      </div>
+
+      <div class="wzh_trace_summary" id="wzh_trace_summary"></div>
+
+      <div class="wzh_trace_toolbar">
+        <button class="wzh_btn wzh_btn_small wzh_btn_ghost" id="wzh_trace_refresh" type="button">刷新痕迹</button>
+        <button class="wzh_btn wzh_btn_small wzh_btn_ghost" id="wzh_trace_clear" type="button">清空痕迹</button>
+        <span class="wzh_hint">答辩时可以按时间顺序说明每一步做了什么、用了哪个模型。</span>
+      </div>
+
+      <div class="wzh_trace_list" id="wzh_trace_list">
+        <div class="wzh_empty">还没有操作痕迹，先完成上面任意一项实践。</div>
+      </div>
+    </article>
+
+  </section>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 0807 · 高级网页设计 2026-2027-1</span>
+    <span>接口：/api/chat · /api/kb/* · /api/vision · /api/asr · /api/llm/*</span>
+  </footer>
+</main>
+
+<script src="./js/wzh_llmpractice.js"></script>
+</body>
+</html>

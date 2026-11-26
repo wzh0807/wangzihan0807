@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="非植入式脑机接口示意">
+  <defs>
+    <linearGradient id="bg7" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#301a33"/><stop offset="1" stop-color="#0a0a16"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg7)"/>
+  <g fill="none" stroke="#f472b6" stroke-opacity=".8">
+    <path d="M430 190c-60-40-150-20-160 60-6 56 30 96 60 120 26 20 40 30 40 60"/>
+    <path d="M470 190c60-40 150-20 160 60 6 56-30 96-60 120-26 20-40 30-40 60"/>
+    <path d="M450 184c-34-26-74-30-104-14"/>
+    <path d="M450 184c34-26 74-30 104-14"/>
+  </g>
+  <g fill="none" stroke="#f9a8d4" stroke-opacity=".7">
+    <path d="M340 230c40-26 90-26 130 0s80 30 120 8"/>
+    <path d="M330 286c46-24 96-22 134 6s84 30 128 6"/>
+    <path d="M356 344c38-22 84-18 114 8s70 26 102 10"/>
+  </g>
+  <g stroke="#22d3ee" stroke-width="2" fill="#0e2a33">
+    <rect x="556" y="410" width="150" height="86" rx="10"/>
+  </g>
+  <path d="M556 430h-70l-40 34 40 34h70" fill="none" stroke="#22d3ee" stroke-opacity=".65"/>
+  <text x="48" y="524" fill="#e6eefc" font-size="36" font-family="Microsoft YaHei">非植入式脑机接口</text>
+  <text x="48" y="558" fill="#f472b6" font-size="18" letter-spacing="4" font-family="Consolas">NON-INVASIVE BCI</text>
+</svg>
