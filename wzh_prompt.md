@@ -344,3 +344,13 @@ https://wcs0810.github.io/wcs0810/这里面也没有我的课堂测验
 提示词内容：
 解决问题 并把我的姓名学号写在桌面上（附图：GitHub Pages 仍加载旧 JS 导致 Unexpected token '<'）
 ---
+[2026-11-26 14:42:10]
+使用模型： DeepSeek-V4.1-Flash
+提示词内容：
+吧学号姓名写在截图的界面上（附图：LLM 实践页）
+---
+[2026-11-26 14:44:20]
+使用模型： DeepSeek-V4.1-Flash
+提示词内容：
+还是用不了（附图：GitHub Pages 静态模式无法访问 /api/chat）——改用 Supabase Edge Function 代理
+---

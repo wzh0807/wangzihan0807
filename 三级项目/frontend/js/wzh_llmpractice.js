@@ -93,6 +93,10 @@
     return wzh_msg;
   }
 
+  // 静态托管（GitHub Pages）走 Supabase Edge Function 代理，Key 存在服务端 wzh_secrets 表
+  var wzh_STATIC_CHAT_URL = 'https://uwwujvgqkfnnizdqaqyy.supabase.co/functions/v1/wzh-chat';
+  var wzh_STATIC_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3d3Vqdmdxa2Zubml6ZHFhcXl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU2Njg1MTgsImV4cCI6MjExMTI0NDUxOH0.dNlslEYL1jyG3iJPuxXvITTsQvg36PsGK7LttPZxAcg';
+
   /**
    * 功能名称：wzh_now
    * 功能简介：返回 HH:mm:ss 格式的当前时间，用于操作痕迹的时间戳。
@@ -189,9 +193,9 @@
         wzh_providerSelect.appendChild(wzh_opt);
       });
       wzh_providerSelect.value = 'siliconflow';
-      wzh_setBadge(wzh_providerBadge, '静态演示', '');
-      wzh_chatMeta.innerHTML = '本地启动 backend 后可切换平台并对话';
-      wzh_trace('静态托管模式：跳过平台接口请求（需本地 backend 8807）', false);
+      wzh_setBadge(wzh_providerBadge, '线上代理 · 硅基流动', 'on');
+      wzh_chatMeta.innerHTML = '模型：<b>deepseek-ai/DeepSeek-V4-Flash</b>（Supabase 代理）';
+      wzh_trace('静态托管模式：对话走 Supabase Edge Function 代理，Key 存服务端', true);
       return;
     }
 
@@ -281,22 +285,18 @@
     var wzh_loading = wzh_pushBubble('ai', '正在思考…');
     wzh_loading.classList.add('wzh_msg_loading');
 
-    // 静态托管：不发真实请求，给出可读的演示说明
+    // 静态托管走 Supabase 函数代理；本地仍用 8807 后端
+    var wzh_chatUrl = wzh_isStaticHost() ? wzh_STATIC_CHAT_URL : '/api/chat';
+    var wzh_chatHeaders = { 'Content-Type': 'application/json' };
     if (wzh_isStaticHost()) {
-      wzh_loading.classList.remove('wzh_msg_loading');
-      wzh_loading.querySelector('.wzh_msg_text').textContent =
-        '当前是 GitHub Pages 静态托管，无法访问 /api/chat。\n'
-        + '在本地运行 backend 后打开 http://localhost:8807/llm-practice.html，就能得到真实回复；这里只演示界面效果。';
-      wzh_trace('静态托管：跳过真实请求（需本地后端）', false);
-      wzh_chatBtn.disabled = false;
-      wzh_chatBtn.textContent = '发送';
-      return;
+      wzh_chatHeaders.apikey = wzh_STATIC_ANON;
+      wzh_chatHeaders.Authorization = 'Bearer ' + wzh_STATIC_ANON;
     }
 
     try {
-      var wzh_resp = await fetch('/api/chat', {
+      var wzh_resp = await fetch(wzh_chatUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: wzh_chatHeaders,
         body: JSON.stringify({ provider: wzh_providerId, messages: wzh_messages })
       });
       var wzh_json = await wzh_resp.json();

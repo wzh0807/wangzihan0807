@@ -84,3 +84,7 @@
 2026-11-26 14:35 | DeepSeek-V4.1-Flash | 好的，推送到 GitHub
 
 2026-11-26 14:40 | DeepSeek-V4.1-Flash | 解决问题 并把我的姓名学号写在桌面上（附图：GitHub Pages 仍加载旧 JS 导致 Unexpected token '<'）
+
+2026-11-26 14:42 | DeepSeek-V4.1-Flash | 吧学号姓名写在截图的界面上（附图：LLM 实践页）
+
+2026-11-26 14:44 | DeepSeek-V4.1-Flash | 还是用不了（附图：GitHub Pages 静态模式无法访问 /api/chat）——改用 Supabase Edge Function 代理
