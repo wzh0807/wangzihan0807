@@ -71,6 +71,29 @@
   }
 
   /**
+   * 功能名称：wzh_isStaticHost
+   * 功能简介：判断是否运行在没有后端的静态托管环境（非 localhost / 127.0.0.1）；
+   *           用于切换成静态演示模式，避免直接请求 /api 拿到 404 的 HTML。
+   */
+  function wzh_isStaticHost() {
+    var wzh_host = location.hostname;
+    return !(wzh_host === 'localhost' || wzh_host === '127.0.0.1');
+  }
+
+  /**
+   * 功能名称：wzh_friendlyErr
+   * 功能简介：把静态托管下常见的 "Unexpected token '<'"（把 404 HTML 当 JSON 解析）换成可读提示，
+   *           其他错误原样返回。
+   */
+  function wzh_friendlyErr(wzh_err) {
+    var wzh_msg = (wzh_err && wzh_err.message) ? wzh_err.message : String(wzh_err);
+    if (wzh_msg.indexOf('not valid JSON') >= 0 || wzh_msg.indexOf('Unexpected token') >= 0) {
+      return '当前为静态托管，接口不可用；请在本地运行 backend 后访问 http://localhost:8807 再试。';
+    }
+    return wzh_msg;
+  }
+
+  /**
    * 功能名称：wzh_now
    * 功能简介：返回 HH:mm:ss 格式的当前时间，用于操作痕迹的时间戳。
    */
@@ -152,6 +175,26 @@
    *           默认选中后端返回的平台并写入痕迹。
    */
   async function wzh_loadProviders() {
+    // 静态托管没有后端：用内置平台清单占位，避免请求 /api 得到 404 页面
+    if (wzh_isStaticHost()) {
+      wzh_providers = [
+        { id: 'siliconflow', name: '硅基流动', model: 'deepseek-ai/DeepSeek-V4-Flash', keyConfigured: false },
+        { id: 'qiniu', name: '七牛', model: 'qiniu/conatus-free', keyConfigured: false }
+      ];
+      wzh_providerSelect.innerHTML = '';
+      wzh_providers.forEach(function (wzh_p) {
+        var wzh_opt = document.createElement('option');
+        wzh_opt.value = wzh_p.id;
+        wzh_opt.textContent = wzh_p.name;
+        wzh_providerSelect.appendChild(wzh_opt);
+      });
+      wzh_providerSelect.value = 'siliconflow';
+      wzh_setBadge(wzh_providerBadge, '静态演示', '');
+      wzh_chatMeta.innerHTML = '本地启动 backend 后可切换平台并对话';
+      wzh_trace('静态托管模式：跳过平台接口请求（需本地 backend 8807）', false);
+      return;
+    }
+
     try {
       var wzh_resp = await fetch('/api/chat/providers');
       var wzh_json = await wzh_resp.json();
@@ -238,6 +281,18 @@
     var wzh_loading = wzh_pushBubble('ai', '正在思考…');
     wzh_loading.classList.add('wzh_msg_loading');
 
+    // 静态托管：不发真实请求，给出可读的演示说明
+    if (wzh_isStaticHost()) {
+      wzh_loading.classList.remove('wzh_msg_loading');
+      wzh_loading.querySelector('.wzh_msg_text').textContent =
+        '当前是 GitHub Pages 静态托管，无法访问 /api/chat。\n'
+        + '在本地运行 backend 后打开 http://localhost:8807/llm-practice.html，就能得到真实回复；这里只演示界面效果。';
+      wzh_trace('静态托管：跳过真实请求（需本地后端）', false);
+      wzh_chatBtn.disabled = false;
+      wzh_chatBtn.textContent = '发送';
+      return;
+    }
+
     try {
       var wzh_resp = await fetch('/api/chat', {
         method: 'POST',
@@ -264,9 +319,9 @@
       console.error('[llm] AI 客服请求失败：', wzh_err);
       wzh_loading.classList.remove('wzh_msg_loading');
       wzh_loading.classList.add('wzh_msg_err');
-      wzh_loading.querySelector('.wzh_msg_text').textContent = '请求失败：' + wzh_err.message
+      wzh_loading.querySelector('.wzh_msg_text').textContent = '请求失败：' + wzh_friendlyErr(wzh_err)
         + '\n请确认后端已在 http://localhost:8807 启动。';
-      wzh_trace('AI 客服请求失败：' + wzh_err.message, false);
+      wzh_trace('AI 客服请求失败：' + wzh_friendlyErr(wzh_err), false);
     } finally {
       wzh_chatBtn.disabled = false;
       wzh_chatBtn.textContent = '发送';
@@ -293,6 +348,12 @@
    * 功能简介：拉取 /api/kb/list 渲染知识库文件列表与数量徽标；空库时显示占位提示。
    */
   async function wzh_kbRefresh() {
+    if (wzh_isStaticHost()) {
+      wzh_setBadge(wzh_kbBadge, '静态演示', '');
+      wzh_kbList.innerHTML = '<div class="wzh_empty">静态托管下知识库接口不可用；本地启动 backend 后即可上传与检索。</div>';
+      return;
+    }
+
     try {
       var wzh_resp = await fetch('/api/kb/list');
       var wzh_json = await wzh_resp.json();
@@ -325,7 +386,7 @@
       });
     } catch (wzh_err) {
       console.error('[llm] 知识库列表读取失败：', wzh_err);
-      wzh_trace('知识库列表读取失败：' + wzh_err.message, false);
+      wzh_trace('知识库列表读取失败：' + wzh_friendlyErr(wzh_err), false);
     }
   }
 
@@ -372,8 +433,8 @@
       } catch (wzh_err) {
         console.error('[llm] 知识库上传失败：', wzh_err);
         wzh_kbOut.className = 'wzh_llm_out wzh_err';
-        wzh_kbOut.textContent = '上传失败：' + wzh_err.message;
-        wzh_trace('知识库上传失败：' + wzh_err.message, false);
+        wzh_kbOut.textContent = '上传失败：' + wzh_friendlyErr(wzh_err);
+        wzh_trace('知识库上传失败：' + wzh_friendlyErr(wzh_err), false);
       } finally {
         wzh_kbFile.value = '';
       }
@@ -427,8 +488,8 @@
     } catch (wzh_err) {
       console.error('[llm] 知识库问答失败：', wzh_err);
       wzh_kbOut.className = 'wzh_llm_out wzh_err';
-      wzh_kbOut.textContent = '问答失败：' + wzh_err.message;
-      wzh_trace('知识库问答失败：' + wzh_err.message, false);
+      wzh_kbOut.textContent = '问答失败：' + wzh_friendlyErr(wzh_err);
+      wzh_trace('知识库问答失败：' + wzh_friendlyErr(wzh_err), false);
     } finally {
       wzh_kbAsk.disabled = false;
       wzh_kbAsk.textContent = '知识库问答';
@@ -507,8 +568,8 @@
     } catch (wzh_err) {
       console.error('[llm] 图像识别失败：', wzh_err);
       wzh_visionOut.className = 'wzh_llm_out wzh_err';
-      wzh_visionOut.textContent = '识别失败：' + wzh_err.message;
-      wzh_trace('图像识别失败：' + wzh_err.message, false);
+      wzh_visionOut.textContent = '识别失败：' + wzh_friendlyErr(wzh_err);
+      wzh_trace('图像识别失败：' + wzh_friendlyErr(wzh_err), false);
     } finally {
       wzh_visionBtn.disabled = false;
       wzh_visionBtn.textContent = '开始识别';
@@ -612,8 +673,8 @@
       } catch (wzh_err) {
         console.error('[llm] 语音识别失败：', wzh_err);
         wzh_asrOut.className = 'wzh_llm_out wzh_err';
-        wzh_asrOut.textContent = '识别失败：' + wzh_err.message;
-        wzh_trace('语音识别失败：' + wzh_err.message, false);
+        wzh_asrOut.textContent = '识别失败：' + wzh_friendlyErr(wzh_err);
+        wzh_trace('语音识别失败：' + wzh_friendlyErr(wzh_err), false);
       }
     };
     wzh_reader.readAsDataURL(wzh_blob);

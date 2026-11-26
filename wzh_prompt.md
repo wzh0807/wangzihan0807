@@ -329,3 +329,8 @@ https://wcs0810.github.io/wcs0810/这里面也没有我的课堂测验
 提示词内容：
 更新到github上
 ---
+[2026-11-26 14:33:40]
+使用模型： DeepSeek-V4.1-Flash
+提示词内容：
+还是这样（附图：GitHub Pages 上 llm-practice 仍显示旧版，控制台报 Unexpected token '<'）——补充静态托管降级与模型文案去重
+---

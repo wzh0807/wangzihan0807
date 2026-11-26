@@ -78,3 +78,5 @@
 2026-11-26 14:27 | DeepSeek-V4.1-Flash | 把ai内个改成类似这个封面（附图：深蓝 TECH NEWS 版式的 AI 聊天助手页面）
 
 2026-11-26 14:31 | DeepSeek-V4.1-Flash | 更新到github上
+
+2026-11-26 14:33 | DeepSeek-V4.1-Flash | 还是这样（附图：GitHub Pages 上 llm-practice 仍显示旧版，控制台报 Unexpected token '<'）——补充静态托管降级与模型文案去重
