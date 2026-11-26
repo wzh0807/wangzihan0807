@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="低轨通信卫星示意图">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101a33"/><stop offset="1" stop-color="#070c18"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg2)"/>
+  <g fill="#93c5fd" fill-opacity=".8">
+    <circle cx="90" cy="80" r="2.5"/><circle cx="220" cy="140" r="1.8"/><circle cx="640" cy="90" r="2.2"/>
+    <circle cx="700" cy="210" r="1.6"/><circle cx="380" cy="60" r="1.5"/><circle cx="720" cy="380" r="2"/>
+  </g>
+  <ellipse cx="520" cy="300" rx="250" ry="120" fill="none" stroke="#38bdf8" stroke-opacity=".35" stroke-dasharray="6 8"/>
+  <g transform="translate(470 250) rotate(-18)">
+    <rect x="-26" y="-34" width="52" height="68" rx="6" fill="#1e3a5f" stroke="#7dd3fc"/>
+    <rect x="-120" y="-22" width="86" height="44" rx="4" fill="#0f2c47" stroke="#38bdf8"/>
+    <rect x="34" y="-22" width="86" height="44" rx="4" fill="#0f2c47" stroke="#38bdf8"/>
+    <path d="M-34 0h-6M34 0h6" stroke="#7dd3fc" stroke-width="3"/>
+  </g>
+  <g stroke="#38bdf8" stroke-opacity=".6" fill="none">
+    <path d="M520 420c-60 40-150 50-220 20" stroke-dasharray="4 6"/>
+    <path d="M520 420c40 46 120 62 190 34" stroke-dasharray="4 6"/>
+  </g>
+  <text x="48" y="524" fill="#e6eefc" font-size="36" font-family="Microsoft YaHei">低轨通信卫星</text>
+  <text x="48" y="558" fill="#38bdf8" font-size="18" letter-spacing="4" font-family="Consolas">LEO COMMUNICATION SATELLITE</text>
+</svg>

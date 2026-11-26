@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  姓名：王子涵 | 学号：0807 | 时间：2026-11-23 | 大模型：DeepSeek-V4.1-Flash
+  功能名称：全栈项目首页
+  功能简介：展示姓名、学号、项目名称与项目类别，提供全部页面与接口的入口，
+           背景为 canvas 粒子连线动画。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全栈项目初始化 | 王子涵 0807</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<canvas id="wzh_canvas" aria-hidden="true"></canvas>
+
+<header class="wzh_topbar">
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <nav class="wzh_nav">
+    <a class="wzh_active" href="./index.html">首页</a>
+    <a href="./database.html">数据库连接</a>
+    <a href="./news.html">科技新闻</a>
+    <a href="./gallery.html">图文列表</a>
+    <a href="./ai-chat.html">AI 聊天</a>
+    <a href="./llm-practice.html">LLM 实践</a>
+  </nav>
+</header>
+
+<main class="wzh_wrap">
+  <section class="wzh_hero">
+    <span class="wzh_eyebrow">ADVANCED WEB DESIGN · FULLSTACK INIT</span>
+    <h1>从规则到接口<br><span>一个全栈项目是这样长出来的</span></h1>
+    <p class="wzh_lead">
+      先立规矩（AGENTS.md），再初始化仓库，然后跑起来、连上数据库，
+      最后做出两个真正读数据库的页面。
+    </p>
+
+    <div class="wzh_meta_row">
+      <span class="wzh_chip">姓名：<b>王子涵</b></span>
+      <span class="wzh_chip">学号：<b>0807</b></span>
+      <span class="wzh_chip">项目名称：<b>全栈项目初始化</b></span>
+      <span class="wzh_chip">项目类别：<b>模仿</b></span>
+      <span class="wzh_chip">端口：<b>8807</b></span>
+    </div>
+  </section>
+
+  <section class="wzh_grid">
+    <article class="wzh_card">
+      <span class="wzh_card_no">01 / 连接</span>
+      <h2>数据库连接测试</h2>
+      <p>输入用户名与密码，由后端用 mysql2 真实连接 MySQL，成功显示版本号，失败显示原因。</p>
+      <a class="wzh_card_link" href="./database.html">进入页面</a>
+    </article>
+
+    <article class="wzh_card">
+      <span class="wzh_card_no">02 / 数据</span>
+      <h2>科技新闻列表</h2>
+      <p>读取 wzh_news 表，按发布时间倒序展示标题、摘要、来源与时间，页面顶部显示接口地址。</p>
+      <a class="wzh_card_link" href="./news.html">进入页面</a>
+    </article>
+
+    <article class="wzh_card">
+      <span class="wzh_card_no">03 / 图文</span>
+      <h2>图文列表</h2>
+      <p>读取 wzh_gallery 表，用网格布局展示上图下文卡片，图片加载失败自动显示占位色块。</p>
+      <a class="wzh_card_link" href="./gallery.html">进入页面</a>
+    </article>
+
+    <article class="wzh_card">
+      <span class="wzh_card_no">04 / AI</span>
+      <h2>AI 聊天</h2>
+      <p>多轮对话页面，消息经后端 POST /api/chat 转发给硅基流动大模型，API Key 只放在 backend/.env。</p>
+      <a class="wzh_card_link" href="./ai-chat.html">进入页面</a>
+    </article>
+
+    <article class="wzh_card">
+      <span class="wzh_card_no">05 / LLM</span>
+      <h2>LLM 实践操作痕迹</h2>
+      <p>硅基流动 / 七牛双平台热切换 AI 客服、知识库上传问答、图片识别、语音识别，每次调用实时留痕。</p>
+      <a class="wzh_card_link" href="./llm-practice.html">进入页面</a>
+    </article>
+
+    <article class="wzh_card">
+      <span class="wzh_card_no">06 / 接口</span>
+      <h2>接口直达</h2>
+      <p>健康检查、新闻、图文三个接口，点开即可看到真实 JSON 返回，方便对照页面排查问题。</p>
+      <a class="wzh_card_link" href="/api/health">/api/health</a>
+    </article>
+  </section>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 0807 · 高级网页设计 2026-2027-1</span>
+    <span>Express 8807 · MySQL 5.7 · 原生前端</span>
+  </footer>
+</main>
+
+<script src="./js/wzh_index.js"></script>
+</body>
+</html>

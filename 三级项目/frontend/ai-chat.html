@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  姓名：王子涵 | 学号：0807 | 时间：2026-11-23 | 大模型：DeepSeek-V4.1-Flash
+  功能名称：AI 聊天页
+  功能简介：多轮对话界面，前端把消息数组 POST 给 /api/chat，
+           由后端转调硅基流动大模型接口，回复以气泡形式逐条显示。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 聊天 | 王子涵 0807</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<header class="wzh_topbar">
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <nav class="wzh_nav">
+    <a href="./index.html">首页</a>
+    <a href="./database.html">数据库连接</a>
+    <a href="./news.html">科技新闻</a>
+    <a href="./gallery.html">图文列表</a>
+    <a class="wzh_active" href="./ai-chat.html">AI 聊天</a>
+    <a href="./llm-practice.html">LLM 实践</a>
+  </nav>
+</header>
+
+<main class="wzh_wrap">
+  <div class="wzh_api_bar">
+    <span class="wzh_api_label">当前调用接口：</span>
+    <code id="wzh_api_url">/api/chat</code>
+    <a id="wzh_api_link" href="/api/chat" target="_blank" rel="noopener">打开接口看 JSON ↗</a>
+  </div>
+
+  <section class="wzh_chat_card">
+    <div class="wzh_chat_head">
+      <div>
+        <h1 class="wzh_chat_title">AI 聊天</h1>
+        <p class="wzh_chat_sub">后端代理硅基流动接口 · 模型 <span id="wzh_chat_model">读取中…</span></p>
+      </div>
+      <button class="wzh_chat_clear" id="wzh_chat_clear" type="button">清空对话</button>
+    </div>
+
+    <div class="wzh_chat_box" id="wzh_chat_box" aria-live="polite">
+      <div class="wzh_msg wzh_msg_ai">
+        <div class="wzh_msg_text">你好，我是这个全栈项目里的 AI 助手。问我任何问题，比如「用一句话解释什么是 RESTful 接口」。</div>
+      </div>
+    </div>
+
+    <form class="wzh_chat_form" id="wzh_chat_form">
+      <textarea class="wzh_chat_input" id="wzh_chat_input" rows="3"
+        placeholder="输入你的问题，Enter 发送，Shift + Enter 换行"></textarea>
+      <div class="wzh_chat_actions">
+        <span class="wzh_chat_tip" id="wzh_chat_tip">最多保留最近 10 轮对话</span>
+        <button class="wzh_btn wzh_chat_send" id="wzh_chat_btn" type="submit">发送</button>
+      </div>
+    </form>
+  </section>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 0807 · 高级网页设计</span>
+    <span>接口：POST /api/chat · 模型由 backend/.env 配置</span>
+  </footer>
+</main>
+
+<script src="./js/wzh_aichat.js"></script>
+</body>
+</html>

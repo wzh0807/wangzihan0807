@@ -1,0 +1,6 @@
+# 依赖与凭据，不进版本库
+node_modules/
+.env
+*.log
+.DS_Store
+Thumbs.db

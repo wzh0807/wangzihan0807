@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  姓名：王子涵 | 学号：0807 | 时间：2026-11-26 | 大模型：DeepSeek-V4.1-Flash
+  功能名称：LLM 实践操作痕迹展示
+  功能简介：集中演示四类大模型能力——硅基流动 / 七牛双平台热切换的 AI 客服、知识库上传与检索问答、
+           图片识别、语音识别；每次接口调用都写入操作痕迹面板并同步到控制台，Key 只存在于 backend/.env。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM 实践 | 王子涵 0807</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<header class="wzh_topbar">
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <nav class="wzh_nav">
+    <a href="./index.html">首页</a>
+    <a href="./database.html">数据库连接</a>
+    <a href="./news.html">科技新闻</a>
+    <a href="./gallery.html">图文列表</a>
+    <a href="./ai-chat.html">AI 聊天</a>
+    <a class="wzh_active" href="./llm-practice.html">LLM 实践</a>
+  </nav>
+</header>
+
+<main class="wzh_wrap">
+  <section class="wzh_hero">
+    <span class="wzh_eyebrow">LLM PRACTICE · 操作痕迹</span>
+    <h1>四类大模型能力<br><span>一次课全部跑通</span></h1>
+    <p class="wzh_lead">
+      平台热切换的 AI 客服、自己上传文件的知识库、图片识别、语音识别。
+      每个操作都会实时写入下方「操作痕迹」，方便现场演示时逐条核对。
+    </p>
+    <div class="wzh_meta_row">
+      <span class="wzh_chip">平台：<b>硅基流动 / 七牛</b></span>
+      <span class="wzh_chip">知识库：<b>txt / md</b></span>
+      <span class="wzh_chip">图像：<b>Qwen3-VL</b></span>
+      <span class="wzh_chip">语音：<b>SenseVoice</b></span>
+    </div>
+  </section>
+
+  <section class="wzh_llm_card">
+    <div class="wzh_llm_head">
+      <div>
+        <h2><span class="wzh_llm_no">00 / 痕迹</span>实践操作痕迹</h2>
+        <p>接口调用、平台切换、识别结果都会按时间记录在这里，同时输出到浏览器控制台。</p>
+      </div>
+      <button class="wzh_btn_ghost" id="wzh_trace_clear" type="button">清空痕迹</button>
+    </div>
+    <div class="wzh_trace_box" id="wzh_trace_box">
+      <div class="wzh_trace_line"><span class="wzh_trace_time">--:--:--</span> 页面已就绪，等待第一次操作…</div>
+    </div>
+  </section>
+
+  <div class="wzh_llm_grid">
+
+    <section class="wzh_llm_card">
+      <div class="wzh_llm_head">
+        <div>
+          <h2><span class="wzh_llm_no">01 / AI 客服</span>双平台热切换</h2>
+          <p>前端下拉框选择平台，后端按 provider 读取 .env 中对应平台的地址、Key 与模型；切换后对话照常继续。</p>
+        </div>
+        <span class="wzh_badge wzh_off" id="wzh_provider_badge">读取中…</span>
+      </div>
+
+      <div class="wzh_platform_row">
+        <label for="wzh_provider">当前平台</label>
+        <select class="wzh_select" id="wzh_provider"></select>
+        <span class="wzh_chip">接口：<b>POST /api/chat</b></span>
+        <span class="wzh_chip" id="wzh_chat_meta">模型读取中…</span>
+      </div>
+
+      <div class="wzh_llm_chat_box" id="wzh_llm_chat_box" aria-live="polite"></div>
+
+      <form id="wzh_llm_chat_form">
+        <textarea class="wzh_chat_input" id="wzh_llm_chat_input" rows="2"
+          placeholder="向 AI 客服提问，Enter 发送，Shift + Enter 换行"></textarea>
+        <div class="wzh_llm_actions">
+          <button class="wzh_btn" id="wzh_llm_chat_btn" type="submit">发送</button>
+          <button class="wzh_btn_ghost" id="wzh_llm_chat_clear" type="button">清空对话</button>
+          <span class="wzh_chat_tip">人设：课程 AI 客服「小智」</span>
+        </div>
+      </form>
+    </section>
+
+    <section class="wzh_llm_card">
+      <div class="wzh_llm_head">
+        <div>
+          <h2><span class="wzh_llm_no">02 / 知识库</span>上传文件 + 检索问答</h2>
+          <p>自己上传 txt / md 文件，后端按约 400 字切块存入 data/wzh_kb.json；提问时先关键词检索，再把命中片段交给大模型作答。</p>
+        </div>
+        <span class="wzh_badge" id="wzh_kb_badge">0 个文件</span>
+      </div>
+
+      <div class="wzh_llm_actions">
+        <label class="wzh_file_btn">
+          上传 txt / md 文件
+          <input type="file" id="wzh_kb_file" accept=".txt,.md,.markdown,.csv,.json,text/plain">
+        </label>
+        <span class="wzh_chat_tip">单个文件 ≤ 200KB，上传后立即生效</span>
+      </div>
+
+      <div class="wzh_kb_list" id="wzh_kb_list"></div>
+
+      <div class="wzh_field">
+        <label for="wzh_kb_question">基于知识库提问</label>
+        <textarea class="wzh_chat_input" id="wzh_kb_question" rows="2"
+          placeholder="例如：这个项目的后端端口和数据库名是什么？"></textarea>
+      </div>
+
+      <div class="wzh_llm_actions">
+        <button class="wzh_btn" id="wzh_kb_ask" type="button">知识库问答</button>
+        <span class="wzh_chat_tip">接口：POST /api/kb/chat</span>
+      </div>
+
+      <div class="wzh_llm_out" id="wzh_kb_out">尚未提问。</div>
+      <div id="wzh_kb_matched"></div>
+    </section>
+
+    <section class="wzh_llm_card">
+      <div class="wzh_llm_head">
+        <div>
+          <h2><span class="wzh_llm_no">03 / 图像识别</span>上传图片测试</h2>
+          <p>图片转成 Base64 交给硅基流动视觉模型（Qwen3-VL），由后端 POST /api/vision 转发。</p>
+        </div>
+        <span class="wzh_badge" id="wzh_vision_badge">等待图片</span>
+      </div>
+
+      <div class="wzh_llm_actions">
+        <label class="wzh_file_btn">
+          选择图片
+          <input type="file" id="wzh_vision_file" accept="image/png,image/jpeg,image/webp,image/gif">
+        </label>
+        <span class="wzh_chat_tip">支持 png / jpg / webp，建议小于 4MB</span>
+      </div>
+
+      <img class="wzh_preview" id="wzh_vision_preview" alt="待识别图片预览">
+
+      <div class="wzh_field">
+        <label for="wzh_vision_question">识别要求</label>
+        <textarea class="wzh_chat_input" id="wzh_vision_question" rows="2">请描述这张图片的内容，并指出图中的关键文字或物体。</textarea>
+      </div>
+
+      <div class="wzh_llm_actions">
+        <button class="wzh_btn" id="wzh_vision_btn" type="button">开始识别</button>
+        <span class="wzh_chat_tip">接口：POST /api/vision</span>
+      </div>
+
+      <div class="wzh_llm_out" id="wzh_vision_out">尚未识别。</div>
+    </section>
+
+    <section class="wzh_llm_card">
+      <div class="wzh_llm_head">
+        <div>
+          <h2><span class="wzh_llm_no">04 / 语音识别</span>录音或上传音频</h2>
+          <p>浏览器录音后转成 WAV，Base64 提交后端 POST /api/asr，再以 multipart 调用硅基流动 SenseVoice 识别成文字。</p>
+        </div>
+        <span class="wzh_badge" id="wzh_asr_badge">待录音</span>
+      </div>
+
+      <div class="wzh_llm_actions">
+        <button class="wzh_btn" id="wzh_asr_record" type="button">开始录音</button>
+        <label class="wzh_file_btn">
+          上传音频文件
+          <input type="file" id="wzh_asr_file" accept="audio/*">
+        </label>
+        <span class="wzh_chat_tip">录音需要 http://localhost:8807 环境并允许麦克风</span>
+      </div>
+
+      <audio class="wzh_audio" id="wzh_asr_audio" controls></audio>
+
+      <div class="wzh_llm_out" id="wzh_asr_out">尚未识别。</div>
+    </section>
+
+  </div>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 0807 · 高级网页设计</span>
+    <span>接口：/api/chat · /api/kb/* · /api/vision · /api/asr</span>
+  </footer>
+</main>
+
+<script src="./js/wzh_llmpractice.js"></script>
+</body>
+</html>

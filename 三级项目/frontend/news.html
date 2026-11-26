@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  姓名：王子涵 | 学号：0807 | 时间：2026-11-23 | 大模型：DeepSeek-V4.1-Flash
+  功能名称：科技新闻列表页
+  功能简介：页面顶部显示接口地址，下方以列表展示 wzh_news 表中的新闻
+            （标题、摘要、来源、发布时间），数据由 /api/news 提供。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>科技新闻列表 | 王子涵 0807</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<header class="wzh_topbar">
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <nav class="wzh_nav">
+    <a href="./index.html">首页</a>
+    <a href="./database.html">数据库连接</a>
+    <a class="wzh_active" href="./news.html">科技新闻</a>
+    <a href="./gallery.html">图文列表</a>
+    <a href="./ai-chat.html">AI 聊天</a>
+    <a href="./llm-practice.html">LLM 实践</a>
+  </nav>
+</header>
+
+<main class="wzh_wrap">
+  <div class="wzh_api_bar">
+    <span class="wzh_api_label">当前调用接口：</span>
+    <code id="wzh_api_url">/api/news</code>
+    <a id="wzh_api_link" href="/api/news" target="_blank" rel="noopener">打开接口看 JSON ↗</a>
+  </div>
+
+  <div id="wzh_news_box">
+    <div class="wzh_empty">正在从数据库读取新闻…</div>
+  </div>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 0807 · 高级网页设计</span>
+    <span>数据表：wzh_news · 接口：GET /api/news</span>
+  </footer>
+</main>
+
+<script src="./js/wzh_news.js"></script>
+</body>
+</html>

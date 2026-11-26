@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  姓名：王子涵 | 学号：0807 | 时间：2026-11-23 | 大模型：DeepSeek-V4.1-Flash
+  功能名称：数据库连接测试页
+  功能简介：输入用户名与密码（默认 root / xxxx），调用 /api/db-test 由后端真实连接 MySQL，
+            成功显示数据库版本，失败显示 MySQL 原始错误。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据库连接测试 | 王子涵 0807</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<header class="wzh_topbar">
+  <div class="wzh_brand"><span class="wzh_brand_dot"></span>WANGZIHAN · FULLSTACK</div>
+  <nav class="wzh_nav">
+    <a href="./index.html">首页</a>
+    <a class="wzh_active" href="./database.html">数据库连接</a>
+    <a href="./news.html">科技新闻</a>
+    <a href="./gallery.html">图文列表</a>
+    <a href="./ai-chat.html">AI 聊天</a>
+    <a href="./llm-practice.html">LLM 实践</a>
+  </nav>
+</header>
+
+<main class="wzh_wrap wzh_wrap_narrow">
+  <div class="wzh_api_bar">
+    <span class="wzh_api_label">当前调用接口：</span>
+    <code id="wzh_api_url">/api/db-test（POST）</code>
+    <a href="/api/health" target="_blank" rel="noopener">先看健康检查 ↗</a>
+  </div>
+
+  <section class="wzh_card" style="padding:26px 24px;">
+    <span class="wzh_card_no">01 / CONNECT</span>
+    <h2 style="margin:6px 0 4px;">测试 MySQL 数据库连接</h2>
+    <p style="margin-bottom:20px;">凭据默认从 backend/.env 读取；这里输入的内容会随请求发给后端，只用于本次测试，不会保存。</p>
+
+    <form class="wzh_form" id="wzh_db_form" autocomplete="off">
+      <div class="wzh_field">
+        <label for="wzh_username">用户名</label>
+        <input type="text" id="wzh_username" name="username" value="root" placeholder="数据库用户名">
+      </div>
+      <div class="wzh_field">
+        <label for="wzh_password">密码</label>
+        <input type="password" id="wzh_password" name="password" value="xxxx" placeholder="数据库密码">
+      </div>
+      <button class="wzh_btn" type="submit" id="wzh_db_btn">测试连接</button>
+    </form>
+
+    <div class="wzh_result" id="wzh_db_result">等待测试…</div>
+    <p class="wzh_hint">提示：密码先保持 xxxx 会看到失败提示，改成真实密码后再点一次即可看到成功提示。</p>
+  </section>
+
+  <footer class="wzh_foot">
+    <span>王子涵 · 0807 · 高级网页设计</span>
+    <span>接口：POST /api/db-test</span>
+  </footer>
+</main>
+
+<script src="./js/wzh_database.js"></script>
+</body>
+</html>

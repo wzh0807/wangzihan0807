@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "id": "kb_1795670874482_upm5",
+      "name": "readme.md",
+      "size": 846,
+      "chars": 547,
+      "chunkCount": 2,
+      "chunks": [
+        "# 三级项目 · 全栈项目初始化（课堂案例复刻）\n- 姓名：王子涵\n- 学号：0807\n- 项目类别：模仿（课堂案例复刻）\n- 技术栈：原生 HTML/CSS/JS + Node.js Express + MySQL 5.7\n- 后端端口：8807\n## 启动方式\n1. 确认本机 MySQL 已启动（phpstudy 面板启动或运行 `mysqld`）\n2. 双击根目录 `start.bat`\n3. 浏览器访问 http://localhost:8807\n## 接口",
+        "| 接口 | 说明 |\n| --- | --- |\n| `GET /api/health` | 健康检查 |\n| `POST /api/db-test` | 测试数据库连接 |\n| `GET /api/news` | 科技新闻列表 |\n| `GET /api/gallery` | 图文列表 |\n| `POST /api/chat` | AI 聊天（后端转发硅基流动大模型） |\n| `GET /api/chat/config` | AI 模型名与 Key 配置状态 |\n详细说明见 `backend/wzh_interface.md`，数据库重建脚本见 `backend/wzh_database.md`。"
+      ],
+      "time": "2026/11/26 13:27:54"
+    }
+  ]
+}

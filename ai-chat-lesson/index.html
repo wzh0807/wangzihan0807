@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<!--
+  作者：王子涵
+  建立时间：2026-11-23
+  使用模型：DeepSeek-V4.1-Flash
+  功能名称：第二步 AI 聊天课堂页面
+  功能简介：把「用硅基流动 Key 做 AI 聊天」这一步单独做成可分享的静态页面，展示跟做五步、curl 自测命令，并提供一个在线聊天演示区（有本地后端时走真实接口，纯静态托管时自动降级为模拟回复）。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="第二步：用硅基流动 Key 做 AI 聊天 · 王子涵 0807">
+    <title>第二步：用硅基流动 Key 做 AI 聊天 | 王子涵 0807</title>
+    <style>
+        :root {
+            --wzh_ink: #1e293b;
+            --wzh_muted: #64748b;
+            --wzh_paper: #f1f5f9;
+            --wzh_card: #ffffff;
+            --wzh_line: #d7e0ea;
+            --wzh_accent: #2563eb;
+            --wzh_accent_soft: #e8efff;
+            --wzh_green: #157a52;
+            --wzh_red: #c0392b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            color: var(--wzh_ink);
+            background: var(--wzh_paper);
+            font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+            line-height: 1.7;
+        }
+        .wzh_page { width: min(900px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 64px; }
+        .wzh_back { display: inline-block; margin-bottom: 22px; color: var(--wzh_muted); font-size: .9rem; text-decoration: none; }
+        .wzh_back:hover { color: var(--wzh_accent); }
+        .wzh_head { display: flex; justify-content: space-between; align-items: start; gap: 18px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid var(--wzh_line); }
+        h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.3; }
+        .wzh_sub { margin: 0; color: var(--wzh_muted); font-size: .92rem; }
+        .wzh_badge { padding: 6px 14px; border-radius: 999px; background: var(--wzh_accent_soft); color: var(--wzh_accent); font-size: .82rem; font-weight: 700; white-space: nowrap; }
+        .wzh_card { margin-top: 22px; padding: 22px 24px; background: var(--wzh_card); border: 1px solid var(--wzh_line); border-radius: 12px; }
+        h2 { margin: 0 0 12px; font-size: 1.12rem; }
+        h2 .wzh_no { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 50%; background: var(--wzh_accent); color: #fff; font-size: .8rem; vertical-align: 2px; }
+        p { margin: 0 0 10px; }
+        ul, ol { margin: 0 0 10px; padding-left: 22px; }
+        li { margin-bottom: 6px; }
+        code { padding: 1px 5px; border-radius: 4px; background: #eef2f7; font-family: Consolas, monospace; font-size: .88em; }
+        .wzh_code { position: relative; margin: 0; padding: 18px 16px; background: #20303f; color: #e6edf3; border-radius: 10px; overflow-x: auto; font-family: Consolas, monospace; font-size: .82rem; line-height: 1.65; white-space: pre; }
+        .wzh_copy { position: absolute; top: 10px; right: 10px; padding: 4px 12px; border: 0; border-radius: 6px; background: #3b82f6; color: #fff; font-size: .78rem; cursor: pointer; }
+        .wzh_copy:hover { background: #2563eb; }
+        .wzh_tip { padding: 10px 14px; border-left: 4px solid var(--wzh_accent); border-radius: 0 8px 8px 0; background: var(--wzh_accent_soft); font-size: .9rem; }
+        .wzh_warn { border-left-color: var(--wzh_red); background: #fdeceb; }
+        .wzh_ok { border-left-color: var(--wzh_green); background: #e9f7f1; }
+
+        /* 聊天演示 */
+        .wzh_chat_box { display: flex; flex-direction: column; height: 420px; margin-top: 14px; border: 1px solid var(--wzh_line); border-radius: 12px; overflow: hidden; background: #fafcfe; }
+        .wzh_chat_log { flex: 1; padding: 16px; overflow-y: auto; }
+        .wzh_msg { max-width: 82%; margin-bottom: 12px; padding: 10px 14px; border-radius: 12px; font-size: .92rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+        .wzh_msg.wzh_user { margin-left: auto; background: var(--wzh_accent); color: #fff; border-bottom-right-radius: 4px; }
+        .wzh_msg.wzh_bot { margin-right: auto; background: #fff; border: 1px solid var(--wzh_line); border-bottom-left-radius: 4px; }
+        .wzh_msg.wzh_sys { max-width: 100%; background: #fff7e6; border: 1px dashed #e0b25a; color: #8a5a00; font-size: .84rem; }
+        .wzh_chat_form { display: flex; gap: 10px; padding: 12px; border-top: 1px solid var(--wzh_line); background: #fff; }
+        .wzh_chat_form input { flex: 1; min-width: 0; padding: 10px 14px; border: 1px solid var(--wzh_line); border-radius: 8px; font-size: .92rem; outline: none; }
+        .wzh_chat_form input:focus { border-color: var(--wzh_accent); }
+        .wzh_chat_form button { padding: 10px 22px; border: 0; border-radius: 8px; background: var(--wzh_accent); color: #fff; font-size: .92rem; cursor: pointer; }
+        .wzh_chat_form button:disabled { opacity: .55; cursor: not-allowed; }
+        .wzh_status { margin-top: 10px; font-size: .85rem; color: var(--wzh_muted); }
+        .wzh_status b { color: var(--wzh_ink); }
+
+        @media (max-width: 600px) {
+            .wzh_page { width: calc(100% - 24px); padding: 24px 0 48px; }
+            .wzh_card { padding: 18px 16px; }
+            .wzh_chat_box { height: 380px; }
+            .wzh_msg { max-width: 92%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wzh_page">
+        <a class="wzh_back" href="../index.html">← 返回课堂实践目录</a>
+
+        <header class="wzh_head">
+            <div>
+                <h1>第二步：用硅基流动 Key 做「AI 聊天」</h1>
+                <p class="wzh_sub">王子涵 · 学号 0807 · 在已完成的全栈项目上加一个页面和一个接口</p>
+            </div>
+            <span class="wzh_badge">AI 聊天 · 独立成包</span>
+        </header>
+
+        <section class="wzh_card">
+            <h2><span class="wzh_no">1</span>这一步在做什么</h2>
+            <p>前面的《全栈项目初始化》已经把前端页面、Node.js 后端、MySQL 数据库跑通了。这一步不重新起项目，而是在那套项目上：</p>
+            <ul>
+                <li>把硅基流动的 API Key 写进后端 <code>backend/.env</code>；</li>
+                <li>后端新增 <code>POST /api/chat</code>，把浏览器的消息转发给大模型；</li>
+                <li>前端新增聊天页面，把多轮对话的 <code>messages</code> 数组整体发给后端；</li>
+                <li>Key 只留在服务器端，前端代码里永远看不到明文 Key。</li>
+            </ul>
+            <p class="wzh_tip wzh_warn">页面里不保存、不展示你自己的 Key。示例中一律写成 <code>sk-****</code>。</p>
+        </section>
+
+        <section class="wzh_card">
+            <h2><span class="wzh_no">2</span>先验一次 Key 通不通（强烈建议）</h2>
+            <p>在命令行直接打一次硅基流动的接口，能分清「Key 有问题」还是「我的代码有问题」。</p>
+            <pre class="wzh_code"><button class="wzh_copy" type="button" data-wzh-copy="wzh_curl">复制</button><span id="wzh_curl">curl --request POST ^
+  --url https://api.siliconflow.cn/v1/chat/completions ^
+  -H "Content-Type: application/json" ^
+  -H "Authorization: Bearer YOUR_API_KEY" ^
+  -d "{\"model\":\"deepseek-ai/DeepSeek-V4-Flash\",\"messages\":[{\"role\":\"system\",\"content\":\"你是一个有用的助手\"},{\"role\":\"user\",\"content\":\"你好，请介绍一下你自己\"}]}"</span></pre>
+            <p class="wzh_tip">成功时会返回一大段 JSON，里面有 <code>"content":"你好！我是…"</code> 这样的中文回答，说明 Key 和额度都没问题。</p>
+        </section>
+
+        <section class="wzh_card">
+            <h2><span class="wzh_no">3</span>跟做五步</h2>
+            <ol>
+                <li><b>写 Key：</b><code>backend/.env</code> 增加 <code>SILICONFLOW_API_KEY=sk-****</code>，不要加引号、不要留空格；</li>
+                <li><b>写接口：</b><code>POST /api/chat</code> 接收 <code>{ messages: [...] }</code>，用 Key 转发到硅基流动，返回统一格式 <code>{ code, msg, data }</code>；</li>
+                <li><b>写页面：</b>输入框 + 消息气泡，发送后把用户这句话 push 进 <code>messages</code>；</li>
+                <li><b>多轮对话：</b>把模型回复也 push 进 <code>messages</code>，下次请求带上完整历史；</li>
+                <li><b>测试与记录：</b>先问「你好」，再问「我刚才问了什么」，能答出上一句就说明上下文生效。</li>
+            </ol>
+            <p class="wzh_tip wzh_ok">完整代码见 <a href="../三级项目/frontend/ai-chat.html">三级项目/frontend/ai-chat.html</a> 与 <a href="../三级项目/backend/wzh_apiController.js">backend/wzh_apiController.js</a>（含后端转发逻辑）。</p>
+        </section>
+
+        <section class="wzh_card">
+            <h2><span class="wzh_no">4</span>在线聊天演示</h2>
+            <p>本页在本地有后端时直连 <code>/api/chat</code>；如果是纯静态托管（没有 Node 后端），会自动降级为演示回复，用于展示交互流程。</p>
+            <div class="wzh_chat_box">
+                <div class="wzh_chat_log" id="wzh_chat_log"></div>
+                <form class="wzh_chat_form" id="wzh_chat_form">
+                    <input id="wzh_chat_input" type="text" placeholder="试试问：你好，请介绍一下你自己" autocomplete="off" maxlength="200">
+                    <button id="wzh_chat_send" type="submit">发送</button>
+                </form>
+            </div>
+            <p class="wzh_status" id="wzh_chat_status">连接状态：<b>检测中…</b></p>
+        </section>
+    </div>
+
+    <script>
+        /**
+         * 功能名称：wzh_appendMessage
+         * 功能简介：往聊天窗口追加一条气泡消息。type 取 user / bot / sys，分别对应左右气泡和系统提示；返回追加后的元素。
+         */
+        function wzh_appendMessage(wzh_text, wzh_type) {
+            var wzh_log = document.getElementById('wzh_chat_log');
+            var wzh_item = document.createElement('div');
+            wzh_item.className = 'wzh_msg wzh_' + (wzh_type || 'bot');
+            wzh_item.textContent = wzh_text;
+            wzh_log.appendChild(wzh_item);
+            wzh_log.scrollTop = wzh_log.scrollHeight;
+            return wzh_item;
+        }
+
+        /**
+         * 功能名称：wzh_setStatus
+         * 功能简介：更新页面底部的连接状态文字；wzh_html 为要展示的状态内容，支持简单 HTML。
+         */
+        function wzh_setStatus(wzh_html) {
+            document.getElementById('wzh_chat_status').innerHTML = '连接状态：<b>' + wzh_html + '</b>';
+        }
+
+        /**
+         * 功能名称：wzh_detectBackend
+         * 功能简介：探测同源的 /api/chat/config 是否存在。存在说明本地后端在跑，可走真实接口；否则视为纯静态托管，进入演示模式。返回 Promise<boolean>。
+         */
+        function wzh_detectBackend() {
+            if (location.protocol === 'file:') {
+                return Promise.resolve(false);
+            }
+            return fetch('./../api/chat/config', { method: 'GET' })
+                .then(function (wzh_res) {
+                    return wzh_res.ok ? wzh_res.json().then(function () { return true; }) : false;
+                })
+                .catch(function () { return false; });
+        }
+
+        /**
+         * 功能名称：wzh_fakeReply
+         * 功能简介：演示模式下的模拟回复。根据用户输入中的关键词返回固定话术，仅用于展示聊天流程，不调用任何外部服务。返回字符串。
+         */
+        function wzh_fakeReply(wzh_question) {
+            if (/我刚才问了什么|上一句|之前问/.test(wzh_question)) {
+                return '（演示回复）你上一条问的是：「' + (wzh_lastUser || '（还没有）') + '」。真实环境里这句话由大模型根据 messages 历史回答。';
+            }
+            if (/介绍|你是谁|你好/.test(wzh_question)) {
+                return '（演示回复）你好，我是这个页面的聊天演示。真实环境里，这里显示的是硅基流动大模型返回的中文回答。';
+            }
+            return '（演示回复）收到：「' + wzh_question + '」。当前是纯静态演示模式，接上本地 Node 后端后即可获得真实大模型回复。';
+        }
+
+        var wzh_messages = [];
+        var wzh_lastUser = '';
+        var wzh_hasBackend = false;
+
+        /**
+         * 功能名称：wzh_send
+         * 功能简介：处理一次发送：把用户输入 push 进消息历史，按后端是否存在选择真实请求或模拟回复；请求期间禁用按钮，结束后恢复。无返回值，副作用为更新页面与 wzh_messages。
+         */
+        function wzh_send(wzh_text) {
+            var wzh_btn = document.getElementById('wzh_chat_send');
+            var wzh_input = document.getElementById('wzh_chat_input');
+            wzh_appendMessage(wzh_text, 'user');
+            wzh_messages.push({ role: 'user', content: wzh_text });
+            wzh_lastUser = wzh_text;
+            wzh_input.value = '';
+            wzh_btn.disabled = true;
+
+            var wzh_waiting = wzh_appendMessage('正在思考…', 'sys');
+
+            if (!wzh_hasBackend) {
+                setTimeout(function () {
+                    var wzh_reply = wzh_fakeReply(wzh_text);
+                    wzh_waiting.remove();
+                    wzh_appendMessage(wzh_reply, 'bot');
+                    wzh_messages.push({ role: 'assistant', content: wzh_reply });
+                    wzh_btn.disabled = false;
+                    wzh_input.focus();
+                }, 600);
+                return;
+            }
+
+            fetch('../api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: wzh_messages })
+            })
+                .then(function (wzh_res) { return wzh_res.json(); })
+                .then(function (wzh_json) {
+                    wzh_waiting.remove();
+                    if (wzh_json.code === 0 && wzh_json.data && wzh_json.data.reply) {
+                        wzh_appendMessage(wzh_json.data.reply, 'bot');
+                        wzh_messages.push({ role: 'assistant', content: wzh_json.data.reply });
+                    } else {
+                        wzh_appendMessage('接口返回错误：' + (wzh_json.msg || '未知错误'), 'sys');
+                    }
+                })
+                .catch(function (wzh_err) {
+                    wzh_waiting.remove();
+                    wzh_appendMessage('请求失败：' + wzh_err.message, 'sys');
+                })
+                .then(function () {
+                    wzh_btn.disabled = false;
+                    wzh_input.focus();
+                });
+        }
+
+        // 复制按钮：把对应代码块的纯文本写入剪贴板
+        document.querySelectorAll('[data-wzh-copy]').forEach(function (wzh_btn) {
+            wzh_btn.addEventListener('click', function () {
+                var wzh_target = document.getElementById(wzh_btn.getAttribute('data-wzh-copy'));
+                if (!wzh_target) { return; }
+                navigator.clipboard.writeText(wzh_target.textContent).then(function () {
+                    wzh_btn.textContent = '已复制';
+                    setTimeout(function () { wzh_btn.textContent = '复制'; }, 1500);
+                }).catch(function () {
+                    wzh_btn.textContent = '复制失败';
+                    setTimeout(function () { wzh_btn.textContent = '复制'; }, 1500);
+                });
+            });
+        });
+
+        // 表单提交：阻止默认跳转，交给 wzh_send 处理
+        document.getElementById('wzh_chat_form').addEventListener('submit', function (wzh_event) {
+            wzh_event.preventDefault();
+            var wzh_text = document.getElementById('wzh_chat_input').value.trim();
+            if (wzh_text) { wzh_send(wzh_text); }
+        });
+
+        // 初始化：探测后端并按结果切换真实/演示模式
+        wzh_detectBackend().then(function (wzh_ok) {
+            wzh_hasBackend = wzh_ok;
+            if (wzh_ok) {
+                wzh_setStatus('已连接本地后端 /api/chat（真实大模型回复）');
+                wzh_appendMessage('已连接本地后端，发送消息会走真实大模型接口。', 'sys');
+            } else {
+                wzh_setStatus('纯静态演示模式（无 Node 后端，回复为模拟内容）');
+                wzh_appendMessage('当前是线上静态页面，没有 Node 后端，回复为演示内容；在本地启动后端后刷新即可走真实接口。', 'sys');
+            }
+        });
+    </script>
+</body>
+</html>
